@@ -1,14 +1,12 @@
-'use client';
-
 import { useState, useMemo } from 'react';
-import { OS, Tool } from '@/types';
-import { shortcuts } from '@/data/shortcuts';
-import { SearchBar } from '@/components/SearchBar';
-import { OSToggle } from '@/components/OSToggle';
-import { ToolFilter } from '@/components/ToolFilter';
-import { ShortcutCard } from '@/components/ShortcutCard';
+import { OS, Tool } from './types';
+import { shortcuts } from './data/shortcuts';
+import { SearchBar } from './components/SearchBar';
+import { OSToggle } from './components/OSToggle';
+import { ToolFilter } from './components/ToolFilter';
+import { ShortcutCard } from './components/ShortcutCard';
 
-export default function Home() {
+function App() {
   const [os, setOS] = useState<OS>('windows');
   const [selectedTools, setSelectedTools] = useState<Tool[]>(['vscode', 'obsidian', 'notion']);
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,3 +77,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default App;

@@ -1,0 +1,33 @@
+services:
+  dev:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # ローカルのコードをコンテナにマウント
+      - .:/app
+      # node_modulesはコンテナ内のものを使用（ローカルのnode_modulesで上書きしない）
+      - /app/node_modules
+    environment:
+      # ファイル監視のポーリングを有効化（Docker環境で必要）
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      # Node.jsの環境設定
+      - NODE_ENV=development
+    command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0"
+    stdin_open: true
+    tty: true
+    # Docker Composeのwatch機能（Windows環境で重要）
+    develop:
+      watch:
+        # ソースコードの変更を同期
+        - action: sync
+          path: ./
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+            - .git/
+        # package.jsonの変更時は再ビルド
+        - action: rebuild
+          path: package.json

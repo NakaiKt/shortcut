@@ -1,3 +1,5 @@
+'use client';
+
 import { OS, OS_LABELS } from '@/types';
 import { Button } from './ui/button';
 

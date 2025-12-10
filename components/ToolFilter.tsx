@@ -1,3 +1,5 @@
+'use client';
+
 import { Tool, TOOL_LABELS } from '@/types';
 import { Button } from './ui/button';
 

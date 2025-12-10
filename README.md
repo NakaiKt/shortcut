@@ -11,9 +11,9 @@
 
 ## 技術スタック
 
-- Next.js 15 (App Router)
 - React 18
 - TypeScript
+- Vite
 - Tailwind CSS
 - shadcn/ui
 
@@ -29,42 +29,34 @@ npm run dev
 # ビルド
 npm run build
 
-# 本番サーバー起動
-npm start
+# プレビュー
+npm run preview
 ```
-
-## Vercelへのデプロイ
-
-このプロジェクトはVercelへのデプロイを想定しています：
-
-1. GitHubリポジトリをVercelにインポート
-2. 自動的にビルドとデプロイが実行されます
-3. 環境変数の設定は不要（フロントエンドのみ）
 
 ## プロジェクト構造
 
 ```
-app/
-├── layout.tsx        # ルートレイアウト
-├── page.tsx          # メインページ（App Router）
-└── globals.css       # グローバルスタイル
-components/
-├── ui/               # 基本UIコンポーネント（Button、Input、Card等）
-├── SearchBar.tsx     # 検索バー
-├── OSToggle.tsx      # OS切り替え
-├── ToolFilter.tsx    # ツールフィルタ
-└── ShortcutCard.tsx  # ショートカットカード
-data/
-└── shortcuts.ts      # ショートカットデータ（後のAPI化を考慮）
-types/
-└── index.ts          # TypeScript型定義
-lib/
-└── utils.ts          # ユーティリティ
+src/
+├── components/        # UIコンポーネント
+│   ├── ui/           # 基本UIコンポーネント（Button、Input、Card等）
+│   ├── SearchBar.tsx # 検索バー
+│   ├── OSToggle.tsx  # OS切り替え
+│   ├── ToolFilter.tsx # ツールフィルタ
+│   └── ShortcutCard.tsx # ショートカットカード
+├── data/             # データ定義
+│   └── shortcuts.ts  # ショートカットデータ（後のAPI化を考慮）
+├── types/            # TypeScript型定義
+│   └── index.ts
+├── lib/              # ユーティリティ
+│   └── utils.ts
+├── App.tsx           # メインアプリケーション
+├── main.tsx          # エントリーポイント
+└── index.css         # グローバルスタイル
 ```
 
 ## ショートカットの追加
 
-`data/shortcuts.ts` に新しいショートカットを追加できます：
+`src/data/shortcuts.ts` に新しいショートカットを追加できます：
 
 ```typescript
 {

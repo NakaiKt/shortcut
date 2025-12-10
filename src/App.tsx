@@ -8,14 +8,14 @@ import { ShortcutCard } from './components/ShortcutCard';
 
 function App() {
   const [os, setOS] = useState<OS>('windows');
-  const [selectedTools, setSelectedTools] = useState<Tool[]>(['vscode', 'obsidian', 'notion']);
+  const [selectedTools, setSelectedTools] = useState<Tool[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   // フィルタリングされたショートカット
   const filteredShortcuts = useMemo(() => {
     return shortcuts.filter((shortcut) => {
-      // ツールフィルタ
-      if (!selectedTools.includes(shortcut.tool)) {
+      // ツールフィルタ（選択されているツールがある場合のみフィルタリング）
+      if (selectedTools.length > 0 && !selectedTools.includes(shortcut.tool)) {
         return false;
       }
 
@@ -37,9 +37,6 @@ function App() {
         {/* ヘッダー */}
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-2">ショートカット・コマンドデータベース</h1>
-          <p className="text-muted-foreground">
-            よく使うツールのショートカットを素早く検索
-          </p>
         </header>
 
         {/* フィルタ・検索エリア */}

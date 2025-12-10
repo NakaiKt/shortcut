@@ -15,6 +15,10 @@ export function ToolFilter({ selectedTools, onChange }: ToolFilterProps) {
     }
   };
 
+  const clearAll = () => {
+    onChange([]);
+  };
+
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm font-medium">ツール:</span>
@@ -30,6 +34,16 @@ export function ToolFilter({ selectedTools, onChange }: ToolFilterProps) {
             {TOOL_LABELS[tool]}
           </Button>
         ))}
+        {selectedTools.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAll}
+            className="h-8"
+          >
+            すべてクリア
+          </Button>
+        )}
       </div>
     </div>
   );

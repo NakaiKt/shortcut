@@ -14,7 +14,7 @@ function App() {
       <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
 
       {/* メインコンテンツ */}
-      <main className="flex-1 px-8 py-8 max-w-6xl">
+      <main className="flex-1 px-8 py-8 max-w-6xl mx-auto">
         {currentPage === 'shortcuts' && <ShortcutsList />}
         {currentPage === 'text-editor' && <TextEditor />}
       </main>

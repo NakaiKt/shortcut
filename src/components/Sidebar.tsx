@@ -14,7 +14,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-60 bg-gray-50 border-r border-gray-200 min-h-screen p-4">
+    <aside className="w-72 bg-gray-50 border-r border-gray-200 min-h-screen p-4">
       <nav className="space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon;

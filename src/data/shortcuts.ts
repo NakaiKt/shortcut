@@ -23,4 +23,13 @@ export const shortcuts: Shortcut[] = [
     macKey: 'Cmd + O',
     isCommand: false,
   },
+  {
+    id: '3',
+    tool: 'notion',
+    name: 'ファイル検索',
+    description: 'ページ内のファイル名検索',
+    windowsKey: 'Ctrl + P',
+    macKey: 'Cmd + P',
+    isCommand: false,
+  },
 ];

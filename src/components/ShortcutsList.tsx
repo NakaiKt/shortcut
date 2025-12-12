@@ -34,15 +34,15 @@ export function ShortcutsList() {
   return (
     <div>
       {/* ヘッダー */}
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">ショートカット・コマンドデータベース</h1>
+      <header className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">ショートカット・コマンドデータベース</h1>
       </header>
 
       {/* フィルタ・検索エリア */}
-      <div className="space-y-4 mb-8">
+      <div className="space-y-4 mb-6 sm:mb-8">
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <OSToggle currentOS={os} onChange={setOS} />
           <ToolFilter selectedTools={selectedTools} onChange={setSelectedTools} />
         </div>
@@ -61,7 +61,7 @@ export function ShortcutsList() {
             <div className="text-sm text-muted-foreground mb-4">
               {filteredShortcuts.length} 件のショートカット
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               {filteredShortcuts.map((shortcut) => (
                 <ShortcutCard key={shortcut.id} shortcut={shortcut} os={os} />
               ))}

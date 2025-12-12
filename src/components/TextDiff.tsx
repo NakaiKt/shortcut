@@ -276,13 +276,13 @@ export function TextDiff() {
   const getLineStyle = (type: DiffLine['type']) => {
     switch (type) {
       case 'delete':
-        return 'bg-red-50 text-red-900 border-l-4 border-red-400';
+        return 'bg-red-50 dark:bg-red-950/30 text-red-900 dark:text-red-200 border-l-4 border-red-400 dark:border-red-600';
       case 'insert':
-        return 'bg-green-50 text-green-900 border-l-4 border-green-400';
+        return 'bg-green-50 dark:bg-green-950/30 text-green-900 dark:text-green-200 border-l-4 border-green-400 dark:border-green-600';
       case 'empty':
-        return 'bg-gray-100';
+        return 'bg-gray-100 dark:bg-gray-800';
       default:
-        return 'bg-white';
+        return 'bg-white dark:bg-gray-900';
     }
   };
 
@@ -296,7 +296,9 @@ export function TextDiff() {
       <>
         {line.inlineChanges.map((change, idx) => {
           if (change.type === 'changed') {
-            const bgColor = line.type === 'delete' ? 'bg-red-200' : 'bg-green-200';
+            const bgColor = line.type === 'delete'
+              ? 'bg-red-200 dark:bg-red-800/50'
+              : 'bg-green-200 dark:bg-green-800/50';
             return (
               <span key={idx} className={bgColor}>
                 {change.text}
@@ -343,39 +345,39 @@ export function TextDiff() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <header className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <GitCompare size={32} className="text-blue-600" />
-          <h1 className="text-3xl font-bold">テキスト差分表示</h1>
+      <header className="mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+          <GitCompare size={24} className="text-blue-600 sm:w-8 sm:h-8" />
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">テキスト差分表示</h1>
         </div>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
           2つのテキストを比較して差分を表示します
         </p>
       </header>
 
       {/* 設定パネル */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <div className="flex flex-wrap items-center gap-6">
+      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-4 lg:gap-6">
           {/* 表示モード切替 */}
-          <div>
+          <div className="w-full lg:w-auto">
             <label className="block text-sm font-medium mb-2">表示モード</label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full">
               <button
                 onClick={() => setViewMode('split')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex-1 lg:flex-initial px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors ${
                   viewMode === 'split'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
                 }`}
               >
                 Split View
               </button>
               <button
                 onClick={() => setViewMode('unified')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex-1 lg:flex-initial px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors ${
                   viewMode === 'unified'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
                 }`}
               >
                 Unified View
@@ -384,9 +386,9 @@ export function TextDiff() {
           </div>
 
           {/* オプション */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 w-full lg:w-auto">
             <label className="text-sm font-medium">オプション</label>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -409,12 +411,12 @@ export function TextDiff() {
           </div>
 
           {/* 統計 */}
-          <div className="ml-auto">
-            <div className="flex gap-4 text-sm">
-              <span className="text-green-600 font-medium">
+          <div className="w-full lg:w-auto lg:ml-auto">
+            <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
+              <span className="text-green-600 dark:text-green-400 font-medium">
                 +{stats.additions} 追加
               </span>
-              <span className="text-red-600 font-medium">
+              <span className="text-red-600 dark:text-red-400 font-medium">
                 -{stats.deletions} 削除
               </span>
             </div>
@@ -423,7 +425,7 @@ export function TextDiff() {
       </div>
 
       {/* 入力エリア */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 sm:mb-6">
         {/* 左側テキスト */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -432,18 +434,18 @@ export function TextDiff() {
             </label>
             <button
               onClick={() => handleCopy('left')}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               title="コピー"
             >
               {copiedSide === 'left' ? (
                 <>
-                  <Check size={16} className="text-green-600" />
-                  <span className="text-green-600">コピー完了</span>
+                  <Check size={16} className="text-green-600 dark:text-green-400" />
+                  <span className="text-green-600 dark:text-green-400">コピー完了</span>
                 </>
               ) : (
                 <>
                   <Copy size={16} />
-                  <span>コピー</span>
+                  <span className="hidden sm:inline">コピー</span>
                 </>
               )}
             </button>
@@ -451,7 +453,7 @@ export function TextDiff() {
           <textarea
             value={text1}
             onChange={(e) => setText1(e.target.value)}
-            className="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm resize-y"
+            className="w-full h-32 sm:h-48 px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs sm:text-sm resize-y bg-background text-foreground"
             placeholder="比較元のテキストを入力..."
           />
         </div>
@@ -464,18 +466,18 @@ export function TextDiff() {
             </label>
             <button
               onClick={() => handleCopy('right')}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               title="コピー"
             >
               {copiedSide === 'right' ? (
                 <>
-                  <Check size={16} className="text-green-600" />
-                  <span className="text-green-600">コピー完了</span>
+                  <Check size={16} className="text-green-600 dark:text-green-400" />
+                  <span className="text-green-600 dark:text-green-400">コピー完了</span>
                 </>
               ) : (
                 <>
                   <Copy size={16} />
-                  <span>コピー</span>
+                  <span className="hidden sm:inline">コピー</span>
                 </>
               )}
             </button>
@@ -483,7 +485,7 @@ export function TextDiff() {
           <textarea
             value={text2}
             onChange={(e) => setText2(e.target.value)}
-            className="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm resize-y"
+            className="w-full h-32 sm:h-48 px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs sm:text-sm resize-y bg-background text-foreground"
             placeholder="比較先のテキストを入力..."
           />
         </div>
@@ -491,33 +493,33 @@ export function TextDiff() {
 
       {/* 差分表示エリア */}
       {(text1 || text2) && (
-        <div className="border border-gray-300 rounded-lg overflow-hidden">
-          <div className="bg-gray-100 px-4 py-2 border-b border-gray-300">
-            <h2 className="text-sm font-semibold text-gray-700">差分結果</h2>
+        <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+          <div className="bg-gray-100 dark:bg-gray-800 px-3 sm:px-4 py-2 border-b border-gray-300 dark:border-gray-600">
+            <h2 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200">差分結果</h2>
           </div>
 
           {viewMode === 'split' ? (
             // Split View
-            <div className="grid grid-cols-2 divide-x divide-gray-300">
+            <div className="grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-gray-300 dark:divide-gray-600">
               {/* 左側 */}
-              <div>
-                <div className="bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 border-b border-gray-300">
+              <div className="border-b lg:border-b-0 border-gray-300 dark:border-gray-600">
+                <div className="bg-gray-200 dark:bg-gray-700 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 border-b border-gray-300 dark:border-gray-600">
                   変更前
                 </div>
                 <div
                   ref={leftScrollRef}
                   onScroll={handleScroll('left')}
-                  className="overflow-auto max-h-[600px]"
+                  className="overflow-auto max-h-[400px] sm:max-h-[600px]"
                 >
                   {splitDiffLines.map((line, index) => (
                     <div
                       key={`left-${index}`}
-                      className={`flex font-mono text-sm ${getLineStyle(line.left.type)}`}
+                      className={`flex font-mono text-xs sm:text-sm ${getLineStyle(line.left.type)}`}
                     >
-                      <span className="inline-block w-12 text-right pr-2 text-gray-500 select-none flex-shrink-0">
+                      <span className="inline-block w-8 sm:w-12 text-right pr-1 sm:pr-2 text-gray-500 dark:text-gray-400 select-none flex-shrink-0 text-xs">
                         {line.left.lineNumber || ''}
                       </span>
-                      <span className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
+                      <span className="flex-1 px-1 sm:px-2 py-0.5 sm:py-1 whitespace-pre-wrap break-all">
                         {renderLineContent(line.left)}
                       </span>
                     </div>
@@ -527,23 +529,23 @@ export function TextDiff() {
 
               {/* 右側 */}
               <div>
-                <div className="bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 border-b border-gray-300">
+                <div className="bg-gray-200 dark:bg-gray-700 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 border-b border-gray-300 dark:border-gray-600">
                   変更後
                 </div>
                 <div
                   ref={rightScrollRef}
                   onScroll={handleScroll('right')}
-                  className="overflow-auto max-h-[600px]"
+                  className="overflow-auto max-h-[400px] sm:max-h-[600px]"
                 >
                   {splitDiffLines.map((line, index) => (
                     <div
                       key={`right-${index}`}
-                      className={`flex font-mono text-sm ${getLineStyle(line.right.type)}`}
+                      className={`flex font-mono text-xs sm:text-sm ${getLineStyle(line.right.type)}`}
                     >
-                      <span className="inline-block w-12 text-right pr-2 text-gray-500 select-none flex-shrink-0">
+                      <span className="inline-block w-8 sm:w-12 text-right pr-1 sm:pr-2 text-gray-500 dark:text-gray-400 select-none flex-shrink-0 text-xs">
                         {line.right.lineNumber || ''}
                       </span>
-                      <span className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
+                      <span className="flex-1 px-1 sm:px-2 py-0.5 sm:py-1 whitespace-pre-wrap break-all">
                         {renderLineContent(line.right)}
                       </span>
                     </div>
@@ -553,19 +555,19 @@ export function TextDiff() {
             </div>
           ) : (
             // Unified View
-            <div className="overflow-auto max-h-[600px]">
+            <div className="overflow-auto max-h-[400px] sm:max-h-[600px]">
               {unifiedDiffLines.map((line, index) => (
                 <div
                   key={`unified-${index}`}
-                  className={`flex font-mono text-sm ${getLineStyle(line.type)}`}
+                  className={`flex font-mono text-xs sm:text-sm ${getLineStyle(line.type)}`}
                 >
-                  <span className="inline-block w-12 text-right pr-2 text-gray-500 select-none flex-shrink-0">
+                  <span className="inline-block w-8 sm:w-12 text-right pr-1 sm:pr-2 text-gray-500 dark:text-gray-400 select-none flex-shrink-0 text-xs">
                     {line.lineNumber || ''}
                   </span>
-                  <span className="inline-block w-6 text-center select-none flex-shrink-0">
+                  <span className="inline-block w-4 sm:w-6 text-center select-none flex-shrink-0 text-xs">
                     {line.type === 'delete' ? '-' : line.type === 'insert' ? '+' : ''}
                   </span>
-                  <span className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
+                  <span className="flex-1 px-1 sm:px-2 py-0.5 sm:py-1 whitespace-pre-wrap break-all">
                     {renderLineContent(line)}
                   </span>
                 </div>

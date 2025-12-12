@@ -1,4 +1,4 @@
-import { List, FileText, GitCompare, Moon, Sun } from 'lucide-react';
+import { List, FileText, GitCompare, Moon, Sun, X } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 
 type Page = 'shortcuts' | 'text-editor' | 'text-diff';
@@ -6,9 +6,11 @@ type Page = 'shortcuts' | 'text-editor' | 'text-diff';
 interface SidebarProps {
   currentPage: Page;
   onPageChange: (page: Page) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
+export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarProps) {
   const { isDark, toggleDarkMode } = useDarkMode();
 
   const menuItems = [
@@ -17,8 +19,29 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: 'text-diff' as Page, label: 'テキスト差分表示', icon: GitCompare },
   ];
 
+  const handlePageChange = (page: Page) => {
+    onPageChange(page);
+    onClose();
+  };
+
   return (
-    <aside className="w-72 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4">
+    <aside
+      className={`
+        fixed lg:static inset-y-0 left-0 z-50
+        w-72 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}
+    >
+      {/* 閉じるボタン (モバイルのみ) */}
+      <button
+        onClick={onClose}
+        className="lg:hidden absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+        aria-label="メニューを閉じる"
+      >
+        <X size={20} />
+      </button>
+
       {/* ダークモードトグル */}
       <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4 shadow-sm">
@@ -64,7 +87,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           return (
             <button
               key={item.id}
-              onClick={() => onPageChange(item.id)}
+              onClick={() => handlePageChange(item.id)}
               className={`
                 w-full flex items-center gap-3 px-4 py-3 rounded-lg
                 transition-colors duration-200

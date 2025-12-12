@@ -4,10 +4,16 @@ import DiffMatchPatch from 'diff-match-patch';
 
 type ViewMode = 'split' | 'unified';
 
+interface InlineChange {
+  text: string;
+  type: 'normal' | 'changed';
+}
+
 interface DiffLine {
   type: 'equal' | 'delete' | 'insert' | 'empty';
   content: string;
   lineNumber?: number;
+  inlineChanges?: InlineChange[];
 }
 
 interface SplitDiffLine {
@@ -94,6 +100,36 @@ export function TextDiff() {
     return { lineDiffs, originalLines1: lines1, originalLines2: lines2 };
   }, [text1, text2, ignoreWhitespace, ignoreCase]);
 
+  // 行内差分を計算するヘルパー関数
+  const computeInlineChanges = (text1: string, text2: string, isDelete: boolean): InlineChange[] => {
+    const dmp = new DiffMatchPatch();
+    const diffs = dmp.diff_main(text1, text2);
+    dmp.diff_cleanupSemantic(diffs);
+
+    const changes: InlineChange[] = [];
+    diffs.forEach(([type, text]) => {
+      if (isDelete) {
+        // 削除行の場合、削除された部分と変更なしの部分を表示
+        if (type === DiffMatchPatch.DIFF_DELETE || type === DiffMatchPatch.DIFF_EQUAL) {
+          changes.push({
+            text,
+            type: type === DiffMatchPatch.DIFF_DELETE ? 'changed' : 'normal'
+          });
+        }
+      } else {
+        // 追加行の場合、追加された部分と変更なしの部分を表示
+        if (type === DiffMatchPatch.DIFF_INSERT || type === DiffMatchPatch.DIFF_EQUAL) {
+          changes.push({
+            text,
+            type: type === DiffMatchPatch.DIFF_INSERT ? 'changed' : 'normal'
+          });
+        }
+      }
+    });
+
+    return changes;
+  };
+
   // Unified View用の差分行を生成
   const unifiedDiffLines = useMemo(() => {
     const lines: DiffLine[] = [];
@@ -101,18 +137,35 @@ export function TextDiff() {
     let line1Index = 0;
     let line2Index = 0;
 
-    diffResult.lineDiffs.forEach(([type, diffLines]) => {
-      diffLines.forEach(() => {
+    diffResult.lineDiffs.forEach(([type, diffLines], diffIndex) => {
+      diffLines.forEach((_, lineIdx) => {
         let diffType: DiffLine['type'] = 'equal';
         let content = '';
+        let inlineChanges: InlineChange[] | undefined;
 
         if (type === DiffMatchPatch.DIFF_DELETE) {
           diffType = 'delete';
           content = diffResult.originalLines1[line1Index];
+
+          // 次が追加行の場合、行内差分を計算
+          const nextDiff = diffResult.lineDiffs[diffIndex + 1];
+          if (nextDiff && nextDiff[0] === DiffMatchPatch.DIFF_INSERT && lineIdx === 0) {
+            const nextLine = diffResult.originalLines2[line2Index];
+            inlineChanges = computeInlineChanges(content, nextLine, true);
+          }
+
           line1Index++;
         } else if (type === DiffMatchPatch.DIFF_INSERT) {
           diffType = 'insert';
           content = diffResult.originalLines2[line2Index];
+
+          // 前が削除行の場合、行内差分を計算
+          const prevDiff = diffResult.lineDiffs[diffIndex - 1];
+          if (prevDiff && prevDiff[0] === DiffMatchPatch.DIFF_DELETE && lineIdx === 0) {
+            const prevLine = diffResult.originalLines1[line1Index - 1];
+            inlineChanges = computeInlineChanges(prevLine, content, false);
+          }
+
           line2Index++;
         } else {
           diffType = 'equal';
@@ -125,6 +178,7 @@ export function TextDiff() {
           type: diffType,
           content: content,
           lineNumber: diffType === 'equal' || diffType === 'insert' ? lineNumber++ : undefined,
+          inlineChanges
         });
       });
     });
@@ -140,7 +194,7 @@ export function TextDiff() {
     let line1Index = 0;
     let line2Index = 0;
 
-    diffResult.lineDiffs.forEach(([type, diffLines]) => {
+    diffResult.lineDiffs.forEach(([type, diffLines], diffIndex) => {
       if (type === DiffMatchPatch.DIFF_EQUAL) {
         diffLines.forEach(() => {
           lines.push({
@@ -159,25 +213,47 @@ export function TextDiff() {
           line2Index++;
         });
       } else if (type === DiffMatchPatch.DIFF_DELETE) {
-        diffLines.forEach(() => {
+        diffLines.forEach((_, lineIdx) => {
+          const content = diffResult.originalLines1[line1Index];
+          let inlineChanges: InlineChange[] | undefined;
+
+          // 次が追加行で、同じ位置の場合、行内差分を計算
+          const nextDiff = diffResult.lineDiffs[diffIndex + 1];
+          if (nextDiff && nextDiff[0] === DiffMatchPatch.DIFF_INSERT && lineIdx < nextDiff[1].length) {
+            const nextLine = diffResult.originalLines2[line2Index + lineIdx];
+            inlineChanges = computeInlineChanges(content, nextLine, true);
+          }
+
           lines.push({
             left: {
               type: 'delete',
-              content: diffResult.originalLines1[line1Index],
-              lineNumber: leftLineNumber++
+              content,
+              lineNumber: leftLineNumber++,
+              inlineChanges
             },
             right: { type: 'empty', content: '' },
           });
           line1Index++;
         });
       } else if (type === DiffMatchPatch.DIFF_INSERT) {
-        diffLines.forEach(() => {
+        diffLines.forEach((_, lineIdx) => {
+          const content = diffResult.originalLines2[line2Index];
+          let inlineChanges: InlineChange[] | undefined;
+
+          // 前が削除行で、同じ位置の場合、行内差分を計算
+          const prevDiff = diffResult.lineDiffs[diffIndex - 1];
+          if (prevDiff && prevDiff[0] === DiffMatchPatch.DIFF_DELETE && lineIdx < prevDiff[1].length) {
+            const prevLine = diffResult.originalLines1[line1Index - prevDiff[1].length + lineIdx];
+            inlineChanges = computeInlineChanges(prevLine, content, false);
+          }
+
           lines.push({
             left: { type: 'empty', content: '' },
             right: {
               type: 'insert',
-              content: diffResult.originalLines2[line2Index],
-              lineNumber: rightLineNumber++
+              content,
+              lineNumber: rightLineNumber++,
+              inlineChanges
             },
           });
           line2Index++;
@@ -208,6 +284,29 @@ export function TextDiff() {
       default:
         return 'bg-white';
     }
+  };
+
+  // 行内容をレンダリング（行内差分のハイライト付き）
+  const renderLineContent = (line: DiffLine) => {
+    if (!line.inlineChanges || line.inlineChanges.length === 0) {
+      return line.content || '\u00A0';
+    }
+
+    return (
+      <>
+        {line.inlineChanges.map((change, idx) => {
+          if (change.type === 'changed') {
+            const bgColor = line.type === 'delete' ? 'bg-red-200' : 'bg-green-200';
+            return (
+              <span key={idx} className={bgColor}>
+                {change.text}
+              </span>
+            );
+          }
+          return <span key={idx}>{change.text}</span>;
+        })}
+      </>
+    );
   };
 
   // 統計情報
@@ -419,7 +518,7 @@ export function TextDiff() {
                         {line.left.lineNumber || ''}
                       </span>
                       <span className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
-                        {line.left.content || '\u00A0'}
+                        {renderLineContent(line.left)}
                       </span>
                     </div>
                   ))}
@@ -445,7 +544,7 @@ export function TextDiff() {
                         {line.right.lineNumber || ''}
                       </span>
                       <span className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
-                        {line.right.content || '\u00A0'}
+                        {renderLineContent(line.right)}
                       </span>
                     </div>
                   ))}
@@ -467,7 +566,7 @@ export function TextDiff() {
                     {line.type === 'delete' ? '-' : line.type === 'insert' ? '+' : ''}
                   </span>
                   <span className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
-                    {line.content || '\u00A0'}
+                    {renderLineContent(line)}
                   </span>
                 </div>
               ))}

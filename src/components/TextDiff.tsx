@@ -28,53 +28,102 @@ export function TextDiff() {
   const rightScrollRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
 
-  // 差分計算
+  // 行単位の差分計算（Gitスタイル）
   const diffResult = useMemo(() => {
     const dmp = new DiffMatchPatch();
 
-    let processedText1 = text1;
-    let processedText2 = text2;
+    // テキストを行ごとに分割
+    const lines1 = text1.split('\n');
+    const lines2 = text2.split('\n');
 
-    // スペース無視（改行以外の空白文字のみ）
-    if (ignoreWhitespace) {
-      processedText1 = text1.replace(/[ \t]+/g, '');
-      processedText2 = text2.replace(/[ \t]+/g, '');
-    }
+    // 行の処理（スペース無視、大文字小文字無視）
+    const processLine = (line: string) => {
+      let processed = line;
+      if (ignoreWhitespace) {
+        processed = processed.replace(/[ \t]+/g, '');
+      }
+      if (ignoreCase) {
+        processed = processed.toLowerCase();
+      }
+      return processed;
+    };
 
-    // 大文字小文字無視
-    if (ignoreCase) {
-      processedText1 = processedText1.toLowerCase();
-      processedText2 = processedText2.toLowerCase();
-    }
+    // 行単位で差分を計算
+    const processedLines1 = lines1.map(processLine);
+    const processedLines2 = lines2.map(processLine);
 
-    const diffs = dmp.diff_main(processedText1, processedText2);
+    // 各行を一意の文字にマッピング（diff-match-patchの制約を回避）
+    const lineArray: string[] = [];
+    const lineHash: { [key: string]: number } = {};
+    let lineHashCount = 0;
+
+    const chars1: string[] = [];
+    const chars2: string[] = [];
+
+    processedLines1.forEach((line) => {
+      if (!(line in lineHash)) {
+        lineHash[line] = lineHashCount;
+        lineArray[lineHashCount] = line;
+        lineHashCount++;
+      }
+      chars1.push(String.fromCharCode(lineHash[line]));
+    });
+
+    processedLines2.forEach((line) => {
+      if (!(line in lineHash)) {
+        lineHash[line] = lineHashCount;
+        lineArray[lineHashCount] = line;
+        lineHashCount++;
+      }
+      chars2.push(String.fromCharCode(lineHash[line]));
+    });
+
+    const diffs = dmp.diff_main(chars1.join(''), chars2.join(''));
     dmp.diff_cleanupSemantic(diffs);
 
-    return diffs;
+    // 結果を行に戻す
+    const lineDiffs: Array<[number, string[]]> = [];
+    diffs.forEach(([type, chars]) => {
+      const lines = chars.split('').map((char) => {
+        const index = char.charCodeAt(0);
+        return lineArray[index];
+      });
+      lineDiffs.push([type, lines]);
+    });
+
+    return { lineDiffs, originalLines1: lines1, originalLines2: lines2 };
   }, [text1, text2, ignoreWhitespace, ignoreCase]);
 
   // Unified View用の差分行を生成
   const unifiedDiffLines = useMemo(() => {
     const lines: DiffLine[] = [];
     let lineNumber = 1;
+    let line1Index = 0;
+    let line2Index = 0;
 
-    diffResult.forEach(([type, text]) => {
-      const textLines = text.split('\n');
-
-      textLines.forEach((line, index) => {
-        // 最後の要素が空文字の場合はスキップ（split結果の末尾）
-        if (index === textLines.length - 1 && line === '') return;
-
+    diffResult.lineDiffs.forEach(([type, diffLines]) => {
+      diffLines.forEach(() => {
         let diffType: DiffLine['type'] = 'equal';
+        let content = '';
+
         if (type === DiffMatchPatch.DIFF_DELETE) {
           diffType = 'delete';
+          content = diffResult.originalLines1[line1Index];
+          line1Index++;
         } else if (type === DiffMatchPatch.DIFF_INSERT) {
           diffType = 'insert';
+          content = diffResult.originalLines2[line2Index];
+          line2Index++;
+        } else {
+          diffType = 'equal';
+          content = diffResult.originalLines1[line1Index];
+          line1Index++;
+          line2Index++;
         }
 
         lines.push({
           type: diffType,
-          content: line,
+          content: content,
           lineNumber: diffType === 'equal' || diffType === 'insert' ? lineNumber++ : undefined,
         });
       });
@@ -88,31 +137,52 @@ export function TextDiff() {
     const lines: SplitDiffLine[] = [];
     let leftLineNumber = 1;
     let rightLineNumber = 1;
+    let line1Index = 0;
+    let line2Index = 0;
 
-    diffResult.forEach(([type, text]) => {
-      const textLines = text.split('\n');
-
-      textLines.forEach((line, index) => {
-        // 最後の要素が空文字の場合はスキップ
-        if (index === textLines.length - 1 && line === '') return;
-
-        if (type === DiffMatchPatch.DIFF_EQUAL) {
+    diffResult.lineDiffs.forEach(([type, diffLines]) => {
+      if (type === DiffMatchPatch.DIFF_EQUAL) {
+        diffLines.forEach(() => {
           lines.push({
-            left: { type: 'equal', content: line, lineNumber: leftLineNumber++ },
-            right: { type: 'equal', content: line, lineNumber: rightLineNumber++ },
+            left: {
+              type: 'equal',
+              content: diffResult.originalLines1[line1Index],
+              lineNumber: leftLineNumber++
+            },
+            right: {
+              type: 'equal',
+              content: diffResult.originalLines2[line2Index],
+              lineNumber: rightLineNumber++
+            },
           });
-        } else if (type === DiffMatchPatch.DIFF_DELETE) {
+          line1Index++;
+          line2Index++;
+        });
+      } else if (type === DiffMatchPatch.DIFF_DELETE) {
+        diffLines.forEach(() => {
           lines.push({
-            left: { type: 'delete', content: line, lineNumber: leftLineNumber++ },
+            left: {
+              type: 'delete',
+              content: diffResult.originalLines1[line1Index],
+              lineNumber: leftLineNumber++
+            },
             right: { type: 'empty', content: '' },
           });
-        } else if (type === DiffMatchPatch.DIFF_INSERT) {
+          line1Index++;
+        });
+      } else if (type === DiffMatchPatch.DIFF_INSERT) {
+        diffLines.forEach(() => {
           lines.push({
             left: { type: 'empty', content: '' },
-            right: { type: 'insert', content: line, lineNumber: rightLineNumber++ },
+            right: {
+              type: 'insert',
+              content: diffResult.originalLines2[line2Index],
+              lineNumber: rightLineNumber++
+            },
           });
-        }
-      });
+          line2Index++;
+        });
+      }
     });
 
     return lines;
@@ -145,12 +215,11 @@ export function TextDiff() {
     let additions = 0;
     let deletions = 0;
 
-    diffResult.forEach(([type, text]) => {
-      const lines = text.split('\n').length - 1;
+    diffResult.lineDiffs.forEach(([type, lines]) => {
       if (type === DiffMatchPatch.DIFF_INSERT) {
-        additions += lines || 1;
+        additions += lines.length;
       } else if (type === DiffMatchPatch.DIFF_DELETE) {
-        deletions += lines || 1;
+        deletions += lines.length;
       }
     });
 

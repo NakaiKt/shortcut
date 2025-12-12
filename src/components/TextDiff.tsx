@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { GitCompare, Copy, Check } from 'lucide-react';
 import DiffMatchPatch from 'diff-match-patch';
 
@@ -23,6 +23,11 @@ export function TextDiff() {
   const [ignoreCase, setIgnoreCase] = useState(false);
   const [copiedSide, setCopiedSide] = useState<'left' | 'right' | null>(null);
 
+  // スクロール同期用のref
+  const leftScrollRef = useRef<HTMLDivElement>(null);
+  const rightScrollRef = useRef<HTMLDivElement>(null);
+  const isScrollingRef = useRef(false);
+
   // 差分計算
   const diffResult = useMemo(() => {
     const dmp = new DiffMatchPatch();
@@ -30,10 +35,10 @@ export function TextDiff() {
     let processedText1 = text1;
     let processedText2 = text2;
 
-    // スペース無視
+    // スペース無視（改行以外の空白文字のみ）
     if (ignoreWhitespace) {
-      processedText1 = text1.replace(/\s+/g, '');
-      processedText2 = text2.replace(/\s+/g, '');
+      processedText1 = text1.replace(/[ \t]+/g, '');
+      processedText2 = text2.replace(/[ \t]+/g, '');
     }
 
     // 大文字小文字無視
@@ -151,6 +156,22 @@ export function TextDiff() {
 
     return { additions, deletions };
   }, [diffResult]);
+
+  // スクロール同期ハンドラー
+  const handleScroll = (side: 'left' | 'right') => (e: React.UIEvent<HTMLDivElement>) => {
+    if (isScrollingRef.current) {
+      isScrollingRef.current = false;
+      return;
+    }
+
+    const source = e.currentTarget;
+    const target = side === 'left' ? rightScrollRef.current : leftScrollRef.current;
+
+    if (target) {
+      isScrollingRef.current = true;
+      target.scrollTop = source.scrollTop;
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -315,7 +336,11 @@ export function TextDiff() {
                 <div className="bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 border-b border-gray-300">
                   変更前
                 </div>
-                <div className="overflow-auto max-h-[600px]">
+                <div
+                  ref={leftScrollRef}
+                  onScroll={handleScroll('left')}
+                  className="overflow-auto max-h-[600px]"
+                >
                   {splitDiffLines.map((line, index) => (
                     <div
                       key={`left-${index}`}
@@ -337,7 +362,11 @@ export function TextDiff() {
                 <div className="bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 border-b border-gray-300">
                   変更後
                 </div>
-                <div className="overflow-auto max-h-[600px]">
+                <div
+                  ref={rightScrollRef}
+                  onScroll={handleScroll('right')}
+                  className="overflow-auto max-h-[600px]"
+                >
                   {splitDiffLines.map((line, index) => (
                     <div
                       key={`right-${index}`}
@@ -378,23 +407,6 @@ export function TextDiff() {
         </div>
       )}
 
-      {/* 使い方のヒント */}
-      {!text1 && !text2 && (
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-medium text-blue-900 mb-2">使い方</h3>
-          <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-            <li>上部の2つのテキストエリアにそれぞれテキストを入力してください</li>
-            <li>自動的に差分が計算され、下部に表示されます</li>
-            <li>
-              <span className="text-green-700 font-medium">緑色</span>は追加された行、
-              <span className="text-red-700 font-medium">赤色</span>は削除された行を示します
-            </li>
-            <li>Split Viewでは左右に並べて表示、Unified Viewでは1画面で表示します</li>
-            <li>スペース無視オプションをONにすると、空白文字の違いを無視します</li>
-            <li>大文字小文字無視オプションをONにすると、大文字小文字の違いを無視します</li>
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

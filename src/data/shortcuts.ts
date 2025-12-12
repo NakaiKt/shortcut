@@ -27,7 +27,7 @@ export const shortcuts: Shortcut[] = [
     id: '3',
     tool: 'notion',
     name: 'ファイル検索',
-    description: 'ページ内のファイル名検索',
+    description: 'ワークスペース内のファイル名検索',
     windowsKey: 'Ctrl + P',
     macKey: 'Cmd + P',
     isCommand: false,

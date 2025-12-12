@@ -10,7 +10,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<Page>('shortcuts');
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background text-foreground">
       {/* サイドバー */}
       <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
 

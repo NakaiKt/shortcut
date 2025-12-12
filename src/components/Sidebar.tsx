@@ -1,6 +1,6 @@
-import { List, FileText } from 'lucide-react';
+import { List, FileText, GitCompare } from 'lucide-react';
 
-type Page = 'shortcuts' | 'text-editor';
+type Page = 'shortcuts' | 'text-editor' | 'text-diff';
 
 interface SidebarProps {
   currentPage: Page;
@@ -11,6 +11,7 @@ export function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const menuItems = [
     { id: 'shortcuts' as Page, label: 'ショートカット一覧', icon: List },
     { id: 'text-editor' as Page, label: 'テキスト作成', icon: FileText },
+    { id: 'text-diff' as Page, label: 'テキスト差分表示', icon: GitCompare },
   ];
 
   return (

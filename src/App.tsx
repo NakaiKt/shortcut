@@ -31,21 +31,21 @@ function App() {
 
       {/* メインコンテンツ */}
       <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 w-full">
-        {/* ハンバーガーメニューボタン (モバイルのみ) */}
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-30 p-2 rounded-lg bg-background border border-gray-200 dark:border-gray-700 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          aria-label="メニューを開く"
-        >
-          <Menu size={24} />
-        </button>
-
         <div className="max-w-7xl mx-auto">
           {currentPage === 'shortcuts' && <ShortcutsList />}
           {currentPage === 'text-editor' && <TextEditor />}
           {currentPage === 'text-diff' && <TextDiff />}
         </div>
       </main>
+
+      {/* ハンバーガーメニューボタン (モバイルのみ) - 右下に配置 */}
+      <button
+        onClick={() => setIsSidebarOpen(true)}
+        className="lg:hidden fixed bottom-6 right-6 z-30 p-4 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all active:scale-95"
+        aria-label="メニューを開く"
+      >
+        <Menu size={24} />
+      </button>
     </div>
   );
 }

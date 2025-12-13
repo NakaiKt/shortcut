@@ -2,6 +2,8 @@ export type OS = 'windows' | 'mac';
 
 export type Tool = 'vscode' | 'obsidian' | 'notion';
 
+export type CommandCategory = 'basic' | 'git';
+
 export interface Shortcut {
   id: string;
   tool: Tool;
@@ -13,6 +15,15 @@ export interface Shortcut {
   isCommand: boolean;
 }
 
+export interface Command {
+  id: string;
+  category: CommandCategory;
+  name: string;
+  description: string;
+  windowsCommand: string;
+  macCommand: string;
+}
+
 export const TOOL_LABELS: Record<Tool, string> = {
   vscode: 'VSCode',
   obsidian: 'Obsidian',
@@ -22,4 +33,9 @@ export const TOOL_LABELS: Record<Tool, string> = {
 export const OS_LABELS: Record<OS, string> = {
   windows: 'Windows',
   mac: 'Mac',
+};
+
+export const CATEGORY_LABELS: Record<CommandCategory, string> = {
+  basic: '基本コマンド',
+  git: 'Gitコマンド',
 };

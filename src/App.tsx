@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ShortcutsList } from './components/ShortcutsList';
+import { CommandsList } from './components/CommandsList';
 import { TextEditor } from './components/TextEditor';
 import { TextDiff } from './components/TextDiff';
 
-type Page = 'shortcuts' | 'text-editor' | 'text-diff';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('shortcuts');
@@ -33,6 +34,7 @@ function App() {
       <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 w-full">
         <div className="max-w-7xl mx-auto">
           {currentPage === 'shortcuts' && <ShortcutsList />}
+          {currentPage === 'commands' && <CommandsList />}
           {currentPage === 'text-editor' && <TextEditor />}
           {currentPage === 'text-diff' && <TextDiff />}
         </div>

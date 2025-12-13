@@ -36,6 +36,6 @@ export const OS_LABELS: Record<OS, string> = {
 };
 
 export const CATEGORY_LABELS: Record<CommandCategory, string> = {
-  basic: '基本コマンド',
-  git: 'Gitコマンド',
+  basic: '基本',
+  git: 'Git',
 };

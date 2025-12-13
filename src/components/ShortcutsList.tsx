@@ -35,7 +35,7 @@ export function ShortcutsList() {
     <div>
       {/* ヘッダー */}
       <header className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">ショートカット・コマンドデータベース</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">ショートカット</h1>
       </header>
 
       {/* フィルタ・検索エリア */}

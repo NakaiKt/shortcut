@@ -66,9 +66,13 @@ export function CommandsList() {
       <div className="space-y-4 mb-6 sm:mb-8">
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <OSToggle currentOS={os} onChange={setOS} />
-          <ViewTypeToggle currentView={viewType} onChange={setViewType} />
+        <div className="space-y-3">
+          {/* 1行目: OS と 表示 */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <OSToggle currentOS={os} onChange={setOS} />
+            <ViewTypeToggle currentView={viewType} onChange={setViewType} />
+          </div>
+          {/* 2行目: カテゴリー */}
           <CategoryFilter selectedCategories={selectedCategories} onChange={setSelectedCategories} />
         </div>
       </div>

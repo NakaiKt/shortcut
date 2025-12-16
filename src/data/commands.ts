@@ -301,4 +301,12 @@ export const commands: Command[] = [
       },
     ],
   },
+  {
+    id: 'console-history',
+    category: 'console',
+    name: 'コマンド履歴表示',
+    description: '過去に実行したコマンドの履歴一覧を表示します',
+    windowsCommand: 'history',
+    macCommand: 'history',
+  },
 ];

@@ -13,13 +13,15 @@ export const transactions: Transaction[] = [
         note: 'attributesは後から追加でもOK',
       },
       {
-        note: 'マイグレーションファイルを手動で編集してください',
+        note: 'マイグレーションファイルを手動で編集',
       },
       {
         commandId: 'sequelize-db-migrate-status',
+        note: 'ステータスを確認',
       },
       {
         commandId: 'sequelize-db-migrate',
+        note: 'マイグレーションを実行',
       },
     ],
   },

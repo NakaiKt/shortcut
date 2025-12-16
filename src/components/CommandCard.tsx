@@ -58,6 +58,25 @@ export function CommandCard({ command, os }: CommandCardProps) {
             )}
           </Button>
         </div>
+
+        {command.options && command.options.length > 0 && (
+          <div className="pt-2 border-t">
+            <h4 className="text-xs font-semibold text-muted-foreground mb-2">オプション:</h4>
+            <div className="space-y-2">
+              {command.options.map((option) => {
+                const displayOption = os === 'windows' ? option.windows : option.mac;
+                return (
+                  <div key={option.id} className="text-xs">
+                    <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                      {displayOption}
+                    </code>
+                    <span className="text-muted-foreground ml-2">- {option.description}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,15 +1,19 @@
 import { useState, useMemo } from 'react';
 import { OS, CommandCategory } from '../types';
 import { commands } from '../data/commands';
+import { transactions } from '../data/transactions';
 import { SearchBar } from './SearchBar';
 import { OSToggle } from './OSToggle';
 import { CategoryFilter } from './CategoryFilter';
 import { CommandCard } from './CommandCard';
+import { TransactionCard } from './TransactionCard';
+import { ViewTypeToggle, ViewType } from './ViewTypeToggle';
 
 export function CommandsList() {
   const [os, setOS] = useState<OS>('windows');
   const [selectedCategories, setSelectedCategories] = useState<CommandCategory[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewType, setViewType] = useState<ViewType>('command');
 
   // フィルタリングされたコマンド
   const filteredCommands = useMemo(() => {
@@ -31,6 +35,26 @@ export function CommandsList() {
     });
   }, [selectedCategories, searchQuery]);
 
+  // フィルタリングされたトランザクション
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((transaction) => {
+      // カテゴリーフィルタ（選択されているカテゴリーがある場合のみフィルタリング）
+      if (selectedCategories.length > 0 && !selectedCategories.includes(transaction.category)) {
+        return false;
+      }
+
+      // 検索クエリフィルタ
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchName = transaction.name.toLowerCase().includes(query);
+        const matchDescription = transaction.description.toLowerCase().includes(query);
+        return matchName || matchDescription;
+      }
+
+      return true;
+    });
+  }, [selectedCategories, searchQuery]);
+
   return (
     <div>
       {/* ヘッダー */}
@@ -44,28 +68,54 @@ export function CommandsList() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <OSToggle currentOS={os} onChange={setOS} />
+          <ViewTypeToggle currentView={viewType} onChange={setViewType} />
           <CategoryFilter selectedCategories={selectedCategories} onChange={setSelectedCategories} />
         </div>
       </div>
 
-      {/* コマンド一覧 */}
+      {/* コマンド/トランザクション一覧 */}
       <div className="space-y-4">
-        {filteredCommands.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">
-              該当するコマンドが見つかりませんでした
-            </p>
-          </div>
+        {viewType === 'command' ? (
+          <>
+            {filteredCommands.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg">
+                  該当するコマンドが見つかりませんでした
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-muted-foreground mb-4">
+                  {filteredCommands.length} 件のコマンド
+                </div>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  {filteredCommands.map((command) => (
+                    <CommandCard key={command.id} command={command} os={os} />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <>
-            <div className="text-sm text-muted-foreground mb-4">
-              {filteredCommands.length} 件のコマンド
-            </div>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              {filteredCommands.map((command) => (
-                <CommandCard key={command.id} command={command} os={os} />
-              ))}
-            </div>
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg">
+                  該当するトランザクションが見つかりませんでした
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-muted-foreground mb-4">
+                  {filteredTransactions.length} 件のトランザクション
+                </div>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  {filteredTransactions.map((transaction) => (
+                    <TransactionCard key={transaction.id} transaction={transaction} os={os} />
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

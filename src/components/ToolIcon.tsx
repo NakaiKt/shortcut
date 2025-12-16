@@ -15,19 +15,21 @@ export function ToolIcon({ tool, size = 16, className = '', isSelected = false }
     className: `transition-colors ${className}`,
   };
 
-  // 選択時は白色、非選択時は各ツールの公式カラー
+  // 選択時はモードを反転、非選択時は通常のモードに従う
   const getIconColor = () => {
-    if (isSelected) {
-      return 'text-white';
-    }
-
     switch (tool) {
       case 'vscode':
-        return 'text-[#007ACC] dark:text-[#3794FF]';
+        return isSelected
+          ? 'text-[#3794FF] dark:text-[#007ACC]'
+          : 'text-[#007ACC] dark:text-[#3794FF]';
       case 'obsidian':
-        return 'text-[#7C3AED] dark:text-[#A78BFA]';
+        return isSelected
+          ? 'text-[#A78BFA] dark:text-[#7C3AED]'
+          : 'text-[#7C3AED] dark:text-[#A78BFA]';
       case 'notion':
-        return 'text-gray-900 dark:text-white';
+        return isSelected
+          ? 'text-white dark:text-gray-900'
+          : 'text-gray-900 dark:text-white';
       default:
         return '';
     }

@@ -1,5 +1,6 @@
 import { Tool, TOOL_LABELS } from '@/types';
 import { Button } from './ui/button';
+import { ToolIcon } from './ToolIcon';
 
 interface ToolFilterProps {
   selectedTools: Tool[];
@@ -29,9 +30,10 @@ export function ToolFilter({ selectedTools, onChange }: ToolFilterProps) {
             variant={selectedTools.includes(tool) ? 'default' : 'outline'}
             size="sm"
             onClick={() => toggleTool(tool)}
-            className="h-8"
+            className="h-8 flex items-center gap-1.5"
           >
-            {TOOL_LABELS[tool]}
+            <ToolIcon tool={tool} size={14} />
+            <span>{TOOL_LABELS[tool]}</span>
           </Button>
         ))}
         {selectedTools.length > 0 && (

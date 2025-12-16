@@ -2,6 +2,7 @@ import { Shortcut, OS, TOOL_LABELS } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Keyboard } from 'lucide-react';
+import { ToolIcon } from './ToolIcon';
 
 interface ShortcutCardProps {
   shortcut: Shortcut;
@@ -16,7 +17,10 @@ export function ShortcutCard({ shortcut, os }: ShortcutCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg">{shortcut.name}</CardTitle>
-          <Badge variant="secondary">{TOOL_LABELS[shortcut.tool]}</Badge>
+          <Badge variant="secondary" className="flex items-center gap-1.5">
+            <ToolIcon tool={shortcut.tool} size={14} />
+            <span>{TOOL_LABELS[shortcut.tool]}</span>
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">

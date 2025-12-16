@@ -1,4 +1,5 @@
-import { SiVscodium, SiObsidian, SiNotion } from 'react-icons/si';
+import { SiObsidian, SiNotion } from 'react-icons/si';
+import { VscVscode } from 'react-icons/vsc';
 import { Tool } from '@/types';
 
 interface ToolIconProps {
@@ -15,7 +16,7 @@ export function ToolIcon({ tool, size = 16, className = '' }: ToolIconProps) {
 
   switch (tool) {
     case 'vscode':
-      return <SiVscodium {...iconProps} className={`${iconProps.className} text-[#007ACC] dark:text-[#3794FF]`} />;
+      return <VscVscode {...iconProps} className={`${iconProps.className} text-[#007ACC] dark:text-[#3794FF]`} />;
     case 'obsidian':
       return <SiObsidian {...iconProps} className={`${iconProps.className} text-[#7C3AED] dark:text-[#A78BFA]`} />;
     case 'notion':

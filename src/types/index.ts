@@ -1,8 +1,8 @@
 export type OS = 'windows' | 'mac';
 
-export type Tool = 'vscode' | 'obsidian' | 'notion';
+export type Tool = 'vscode' | 'obsidian' | 'notion' | 'console';
 
-export type CommandCategory = 'basic' | 'git' | 'sequelize' | 'supabase' | 'docker';
+export type CommandCategory = 'basic' | 'git' | 'sequelize' | 'supabase' | 'docker' | 'console';
 
 export interface Shortcut {
   id: string;
@@ -50,6 +50,7 @@ export const TOOL_LABELS: Record<Tool, string> = {
   vscode: 'VSCode',
   obsidian: 'Obsidian',
   notion: 'Notion',
+  console: 'Console',
 };
 
 export const OS_LABELS: Record<OS, string> = {
@@ -63,4 +64,5 @@ export const CATEGORY_LABELS: Record<CommandCategory, string> = {
   sequelize: 'Sequelize',
   supabase: 'Supabase',
   docker: 'Docker',
+  console: 'Console',
 };

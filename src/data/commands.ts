@@ -18,10 +18,18 @@ export const commands: Command[] = [
     macCommand: 'curl ipecho.net/plain; echo',
   },
   {
+    id: 'sequelize-db-create',
+    category: 'sequelize',
+    name: 'データベース作成',
+    description: 'config.jsonの設定に基づいてデータベースを作成します',
+    windowsCommand: 'sequelize db:create',
+    macCommand: 'sequelize db:create',
+  },
+  {
     id: 'sequelize-migration-generate',
     category: 'sequelize',
     name: 'マイグレーションファイル作成',
-    description: 'マイグレーションファイルのみ作成（中身は自分で書く）',
+    description: 'マイグレーションファイルのみ作成（中身は自分で書く）。既存テーブルの更新時に使用',
     windowsCommand: 'sequelize migration:generate',
     macCommand: 'sequelize migration:generate',
     options: [
@@ -37,7 +45,7 @@ export const commands: Command[] = [
     id: 'sequelize-model-generate',
     category: 'sequelize',
     name: 'モデル + マイグレーション作成',
-    description: 'モデルとマイグレーションファイルを同時作成',
+    description: 'モデルとマイグレーションファイルを同時作成（新規テーブル作成時に使用）。model:createでも同じ動作',
     windowsCommand: 'sequelize model:generate',
     macCommand: 'sequelize model:generate',
     options: [
@@ -46,6 +54,12 @@ export const commands: Command[] = [
         windows: '--name {モデル名}',
         mac: '--name {モデル名}',
         description: 'モデル名を指定（例：User）',
+      },
+      {
+        id: 'underscored',
+        windows: '--underscored',
+        mac: '--underscored',
+        description: 'スネークケースのカラム名を使用（推奨）',
       },
       {
         id: 'attributes',
@@ -300,5 +314,13 @@ export const commands: Command[] = [
         description: '最後のN行のみ表示',
       },
     ],
+  },
+  {
+    id: 'console-history',
+    category: 'console',
+    name: 'コマンド履歴表示',
+    description: '過去に実行したコマンドの履歴一覧を表示します',
+    windowsCommand: 'history',
+    macCommand: 'history',
   },
 ];

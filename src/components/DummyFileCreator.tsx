@@ -153,7 +153,6 @@ export function DummyFileCreator() {
 
   const generateCommands = (bytes: number, filenameSuffix: string = '') => {
     const fullFilename = `${filename || 'dummy'}${filenameSuffix}.${extension}`;
-    const sizeValue = parseFloat(size);
 
     // Mac用のサイズ計算
     const getMacSize = (b: number): string => {

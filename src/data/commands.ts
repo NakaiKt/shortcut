@@ -323,4 +323,28 @@ export const commands: Command[] = [
     windowsCommand: 'history',
     macCommand: 'history',
   },
+  {
+    id: 'docker-compose-exec-frontend',
+    category: 'docker-compose',
+    name: 'frontendコンテナに接続',
+    description: 'frontendコンテナ内でshシェルを起動します',
+    windowsCommand: 'docker-compose exec frontend sh',
+    macCommand: 'docker-compose exec frontend sh',
+  },
+  {
+    id: 'docker-compose-down',
+    category: 'docker-compose',
+    name: 'コンテナ停止',
+    description: '起動中のコンテナを停止して削除します',
+    windowsCommand: 'docker-compose down',
+    macCommand: 'docker-compose down',
+  },
+  {
+    id: 'docker-compose-up-build',
+    category: 'docker-compose',
+    name: '再ビルド & 起動',
+    description: 'イメージを再ビルドしてコンテナを起動します',
+    windowsCommand: 'docker-compose up --build',
+    macCommand: 'docker-compose up --build',
+  },
 ];

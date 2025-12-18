@@ -156,17 +156,18 @@ export function DummyFileCreator() {
 
     // Mac用のサイズ計算
     const getMacSize = (b: number): string => {
-      // 境界テストの±1バイトファイルは常にバイト単位で指定
+      // 境界テストの±1バイトファイルは常にバイト単位で指定（サフィックスなし）
+      // 注意: bサフィックスはブロック単位（512バイト）になるため使用しない
       if (filenameSuffix !== '') {
-        return `${b}b`;
+        return `${b}`;
       }
 
       // 指定サイズそのものはユーザーが選択した単位を使用
-      if (unit === 'B') return `${b}b`;
+      if (unit === 'B') return `${b}`;
       if (unit === 'KB') return `${Math.floor(b / 1024)}k`;
       if (unit === 'MB') return `${Math.floor(b / (1024 * 1024))}m`;
       if (unit === 'GB') return `${Math.floor(b / (1024 * 1024 * 1024))}g`;
-      return `${b}b`;
+      return `${b}`;
     };
 
     const commands = {

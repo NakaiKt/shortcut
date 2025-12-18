@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, FileDown } from 'lucide-react';
+import { Download, Plus, Trash2 } from 'lucide-react';
 
 type SizeUnit = 'B' | 'KB' | 'MB' | 'GB';
 
@@ -16,12 +16,20 @@ const EXTENSION_GROUPS = {
   '音声': ['mp3', 'wav', 'ogg', 'm4a'] as const,
 };
 
+interface DummyFile {
+  id: string;
+  filename: string;
+  bytes: number;
+  extension: FileExtension;
+}
+
 export function DummyFileCreator() {
   const [filename, setFilename] = useState('dummy');
   const [size, setSize] = useState('10');
   const [unit, setUnit] = useState<SizeUnit>('MB');
   const [extension, setExtension] = useState<FileExtension>('txt');
   const [boundaryTest, setBoundaryTest] = useState(false);
+  const [files, setFiles] = useState<DummyFile[]>([]);
 
   const calculateBytes = (sizeValue: number, sizeUnit: SizeUnit): number => {
     const multipliers: Record<SizeUnit, number> = {
@@ -33,23 +41,22 @@ export function DummyFileCreator() {
     return Math.floor(sizeValue * multipliers[sizeUnit]);
   };
 
-  const createDummyFile = (bytes: number, suffix: string = '') => {
-    // ダミーデータ（0で埋める）を生成
-    const buffer = new ArrayBuffer(bytes);
-    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+  const downloadFile = (file: DummyFile) => {
+    // Uint8Arrayを使用して正確なバイト数のファイルを作成
+    const data = new Uint8Array(file.bytes);
+    const blob = new Blob([data], { type: 'application/octet-stream' });
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const fullFilename = `${filename}${suffix}.${extension}`;
-    link.download = fullFilename;
+    link.download = file.filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
-  const handleDownload = () => {
+  const handleCreate = () => {
     const sizeValue = parseFloat(size);
 
     if (!filename.trim()) {
@@ -63,23 +70,59 @@ export function DummyFileCreator() {
     }
 
     const bytes = calculateBytes(sizeValue, unit);
+    const newFiles: DummyFile[] = [];
 
     if (boundaryTest) {
       // 境界テスト: -1バイト、指定サイズ、+1バイトの3ファイルを作成
       const minusOneBytes = Math.max(0, bytes - 1);
 
       if (minusOneBytes > 0) {
-        createDummyFile(minusOneBytes, '_minus1');
+        newFiles.push({
+          id: `${Date.now()}-minus1`,
+          filename: `${filename}_minus1.${extension}`,
+          bytes: minusOneBytes,
+          extension,
+        });
       }
-      createDummyFile(bytes, '');
-      createDummyFile(bytes + 1, '_plus1');
-
-      alert(`3つのファイルをダウンロードしました:\n- ${filename}_minus1.${extension} (${minusOneBytes.toLocaleString()} bytes)\n- ${filename}.${extension} (${bytes.toLocaleString()} bytes)\n- ${filename}_plus1.${extension} (${(bytes + 1).toLocaleString()} bytes)`);
+      newFiles.push({
+        id: `${Date.now()}-exact`,
+        filename: `${filename}.${extension}`,
+        bytes: bytes,
+        extension,
+      });
+      newFiles.push({
+        id: `${Date.now()}-plus1`,
+        filename: `${filename}_plus1.${extension}`,
+        bytes: bytes + 1,
+        extension,
+      });
     } else {
       // 通常: 指定サイズのファイルのみ作成
-      createDummyFile(bytes);
-      alert(`ダウンロード完了: ${filename}.${extension} (${bytes.toLocaleString()} bytes)`);
+      newFiles.push({
+        id: `${Date.now()}`,
+        filename: `${filename}.${extension}`,
+        bytes: bytes,
+        extension,
+      });
     }
+
+    setFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  const handleDeleteFile = (id: string) => {
+    setFiles((prev) => prev.filter((file) => file.id !== id));
+  };
+
+  const handleClearAll = () => {
+    setFiles([]);
+  };
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
 
   const displayBytes = () => {
@@ -101,7 +144,7 @@ export function DummyFileCreator() {
         {/* ファイル名入力 */}
         <div>
           <label htmlFor="filename" className="block text-sm font-medium mb-2">
-            ファイル名
+            ファイル名（拡張子なし）
           </label>
           <input
             id="filename"
@@ -170,6 +213,9 @@ export function DummyFileCreator() {
               </optgroup>
             ))}
           </select>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            すべての拡張子で正確なバイト数のファイルが作成されます
+          </div>
         </div>
 
         {/* 境界テストオプション */}
@@ -190,16 +236,72 @@ export function DummyFileCreator() {
           </div>
         </div>
 
-        {/* ダウンロードボタン */}
+        {/* 作成ボタン */}
         <div className="pt-2">
           <button
-            onClick={handleDownload}
+            onClick={handleCreate}
             className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
           >
-            {boundaryTest ? <FileDown size={20} /> : <Download size={20} />}
-            <span>{boundaryTest ? '3つのファイルを作成' : 'ダウンロード'}</span>
+            <Plus size={20} />
+            <span>ファイルを作成</span>
           </button>
         </div>
+
+        {/* ファイル一覧テーブル */}
+        {files.length > 0 && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">作成されたファイル一覧</h2>
+              <button
+                onClick={handleClearAll}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+              >
+                <Trash2 size={16} />
+                すべてクリア
+              </button>
+            </div>
+
+            <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">ファイル名</th>
+                    <th className="px-4 py-3 text-left font-medium">サイズ</th>
+                    <th className="px-4 py-3 text-left font-medium">正確なバイト数</th>
+                    <th className="px-4 py-3 text-center font-medium">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {files.map((file) => (
+                    <tr key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <td className="px-4 py-3 font-mono text-xs sm:text-sm">{file.filename}</td>
+                      <td className="px-4 py-3">{formatBytes(file.bytes)}</td>
+                      <td className="px-4 py-3 font-mono text-xs">{file.bytes.toLocaleString()} bytes</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => downloadFile(file)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs sm:text-sm"
+                          >
+                            <Download size={16} />
+                            <span>ダウンロード</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFile(file.id)}
+                            className="p-1.5 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                            aria-label="削除"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

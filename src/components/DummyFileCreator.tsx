@@ -49,11 +49,16 @@ export function DummyFileCreator() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = file.filename;
+    link.setAttribute('download', file.filename);
+    link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+
+    // クリーンアップを少し遅らせる
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
   };
 
   const handleCreate = () => {
@@ -71,6 +76,7 @@ export function DummyFileCreator() {
 
     const bytes = calculateBytes(sizeValue, unit);
     const newFiles: DummyFile[] = [];
+    const timestamp = Date.now();
 
     if (boundaryTest) {
       // 境界テスト: -1バイト、指定サイズ、+1バイトの3ファイルを作成
@@ -78,20 +84,20 @@ export function DummyFileCreator() {
 
       if (minusOneBytes > 0) {
         newFiles.push({
-          id: `${Date.now()}-minus1`,
+          id: `${timestamp}-minus1-${Math.random()}`,
           filename: `${filename}_minus1.${extension}`,
           bytes: minusOneBytes,
           extension,
         });
       }
       newFiles.push({
-        id: `${Date.now()}-exact`,
+        id: `${timestamp}-exact-${Math.random()}`,
         filename: `${filename}.${extension}`,
         bytes: bytes,
         extension,
       });
       newFiles.push({
-        id: `${Date.now()}-plus1`,
+        id: `${timestamp}-plus1-${Math.random()}`,
         filename: `${filename}_plus1.${extension}`,
         bytes: bytes + 1,
         extension,
@@ -99,7 +105,7 @@ export function DummyFileCreator() {
     } else {
       // 通常: 指定サイズのファイルのみ作成
       newFiles.push({
-        id: `${Date.now()}`,
+        id: `${timestamp}-${Math.random()}`,
         filename: `${filename}.${extension}`,
         bytes: bytes,
         extension,

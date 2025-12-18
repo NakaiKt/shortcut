@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Plus, Trash2, ChevronDown, ChevronUp, Terminal, Copy, Check } from 'lucide-react';
+import { Download, Plus, ChevronDown, ChevronUp, Terminal, Copy, Check } from 'lucide-react';
 
 type SizeUnit = 'B' | 'KB' | 'MB' | 'GB';
 type OSType = 'windows' | 'mac' | 'linux';
@@ -116,15 +116,7 @@ export function DummyFileCreator() {
       });
     }
 
-    setFiles((prev) => [...prev, ...newFiles]);
-  };
-
-  const handleDeleteFile = (id: string) => {
-    setFiles((prev) => prev.filter((file) => file.id !== id));
-  };
-
-  const handleClearAll = () => {
-    setFiles([]);
+    setFiles(newFiles);
   };
 
   const formatBytes = (bytes: number): string => {
@@ -327,15 +319,8 @@ export function DummyFileCreator() {
         {/* ファイル一覧テーブル */}
         {files.length > 0 && (
           <div className="mt-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <h2 className="text-xl font-bold">作成されたファイル一覧</h2>
-              <button
-                onClick={handleClearAll}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-              >
-                <Trash2 size={16} />
-                すべてクリア
-              </button>
             </div>
 
             <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -345,7 +330,7 @@ export function DummyFileCreator() {
                     <th className="px-4 py-3 text-left font-medium">ファイル名</th>
                     <th className="px-4 py-3 text-left font-medium">サイズ</th>
                     <th className="px-4 py-3 text-left font-medium">正確なバイト数</th>
-                    <th className="px-4 py-3 text-center font-medium">操作</th>
+                    <th className="px-4 py-3 text-center font-medium">ダウンロード</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -354,23 +339,14 @@ export function DummyFileCreator() {
                       <td className="px-4 py-3 font-mono text-xs sm:text-sm">{file.filename}</td>
                       <td className="px-4 py-3">{formatBytes(file.bytes)}</td>
                       <td className="px-4 py-3 font-mono text-xs">{file.bytes.toLocaleString()} bytes</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => downloadFile(file)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs sm:text-sm"
-                          >
-                            <Download size={16} />
-                            <span>ダウンロード</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteFile(file.id)}
-                            className="p-1.5 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                            aria-label="削除"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => downloadFile(file)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs sm:text-sm"
+                        >
+                          <Download size={16} />
+                          <span>ダウンロード</span>
+                        </button>
                       </td>
                     </tr>
                   ))}

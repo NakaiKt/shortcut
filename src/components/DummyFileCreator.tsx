@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Plus, Trash2 } from 'lucide-react';
+import { Download, Plus, Trash2, ChevronDown, ChevronUp, Terminal } from 'lucide-react';
 
 type SizeUnit = 'B' | 'KB' | 'MB' | 'GB';
 
@@ -30,6 +30,7 @@ export function DummyFileCreator() {
   const [extension, setExtension] = useState<FileExtension>('txt');
   const [boundaryTest, setBoundaryTest] = useState(false);
   const [files, setFiles] = useState<DummyFile[]>([]);
+  const [showAlternatives, setShowAlternatives] = useState(false);
 
   const calculateBytes = (sizeValue: number, sizeUnit: SizeUnit): number => {
     const multipliers: Record<SizeUnit, number> = {
@@ -135,6 +136,31 @@ export function DummyFileCreator() {
     const sizeValue = parseFloat(size);
     if (isNaN(sizeValue) || sizeValue <= 0) return '0';
     return calculateBytes(sizeValue, unit).toLocaleString();
+  };
+
+  const getCommandExamples = () => {
+    const sizeValue = parseFloat(size);
+    if (isNaN(sizeValue) || sizeValue <= 0) {
+      return { bytes: 0, macSize: '0b', windowsBytes: '0' };
+    }
+
+    const bytes = calculateBytes(sizeValue, unit);
+    const fullFilename = `${filename || 'dummy'}.${extension}`;
+
+    // Mac用のサイズ表記（mkfileコマンド用）
+    const macSizeMap: Record<SizeUnit, string> = {
+      'B': `${sizeValue}b`,
+      'KB': `${sizeValue}k`,
+      'MB': `${sizeValue}m`,
+      'GB': `${sizeValue}g`,
+    };
+
+    return {
+      bytes,
+      fullFilename,
+      macSize: macSizeMap[unit],
+      windowsBytes: bytes.toString(),
+    };
   };
 
   return (
@@ -308,6 +334,118 @@ export function DummyFileCreator() {
             </div>
           </div>
         )}
+
+        {/* 代替案セクション */}
+        <div className="mt-8 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowAlternatives(!showAlternatives)}
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Terminal size={20} className="text-gray-600 dark:text-gray-400" />
+              <span className="font-medium">どうしてもダウンロードできない場合の代替案（コマンドライン）</span>
+            </div>
+            {showAlternatives ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </button>
+
+          {showAlternatives && (
+            <div className="px-4 py-4 space-y-6">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                ブラウザでのダウンロードがうまくいかない場合、以下のコマンドでターミナルから直接ダミーファイルを作成できます。
+              </p>
+
+              {/* Windows */}
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs">
+                    Windows
+                  </span>
+                  PowerShell または コマンドプロンプト
+                </h3>
+                <div className="bg-gray-900 text-gray-100 rounded p-3 font-mono text-xs sm:text-sm overflow-x-auto">
+                  <code>fsutil file createnew {getCommandExamples().fullFilename} {getCommandExamples().windowsBytes}</code>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  例: fsutil file createnew dummy.txt 10485760 (10MB)
+                </p>
+              </div>
+
+              {/* Mac */}
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded text-xs">
+                    Mac
+                  </span>
+                  ターミナル
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm font-medium mb-1">方法1: mkfile（推奨）</p>
+                    <div className="bg-gray-900 text-gray-100 rounded p-3 font-mono text-xs sm:text-sm overflow-x-auto">
+                      <code>mkfile {getCommandExamples().macSize} {getCommandExamples().fullFilename}</code>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      例: mkfile 10m dummy.txt (10MB)
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-1">方法2: dd</p>
+                    <div className="bg-gray-900 text-gray-100 rounded p-3 font-mono text-xs sm:text-sm overflow-x-auto">
+                      <code>dd if=/dev/zero of={getCommandExamples().fullFilename} bs=1 count={getCommandExamples().windowsBytes}</code>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      大きなファイルの場合は bs=1048576 count=10 のようにブロックサイズを調整してください
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Linux */}
+              <div>
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-xs">
+                    Linux
+                  </span>
+                  ターミナル
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm font-medium mb-1">方法1: truncate（推奨・最速）</p>
+                    <div className="bg-gray-900 text-gray-100 rounded p-3 font-mono text-xs sm:text-sm overflow-x-auto">
+                      <code>truncate -s {getCommandExamples().windowsBytes} {getCommandExamples().fullFilename}</code>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      例: truncate -s 10485760 dummy.txt または truncate -s 10M dummy.txt
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-1">方法2: fallocate（高速）</p>
+                    <div className="bg-gray-900 text-gray-100 rounded p-3 font-mono text-xs sm:text-sm overflow-x-auto">
+                      <code>fallocate -l {getCommandExamples().windowsBytes} {getCommandExamples().fullFilename}</code>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-1">方法3: dd（汎用的）</p>
+                    <div className="bg-gray-900 text-gray-100 rounded p-3 font-mono text-xs sm:text-sm overflow-x-auto">
+                      <code>dd if=/dev/zero of={getCommandExamples().fullFilename} bs=1 count={getCommandExamples().windowsBytes}</code>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      大きなファイルの場合は bs=1M count=10 のようにブロックサイズを調整してください
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 注意事項 */}
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>注意:</strong> 上記のコマンド例は現在の入力値（{size} {unit}、ファイル名: {filename || 'dummy'}.{extension}）に基づいています。
+                  値を変更すると、コマンド例も自動的に更新されます。
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

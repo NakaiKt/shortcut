@@ -58,6 +58,25 @@ export const transactions: Transaction[] = [
     ],
   },
   {
+    id: 'sequelize-migration-fix-workflow',
+    category: 'sequelize',
+    name: 'Sequelizeマイグレーション修正（ローカルのみ）',
+    description: '実行済みマイグレーションに間違いがあった場合の修正手順。※注意：ローカル環境のみに反映している場合のみ可能。本番環境やチーム共有環境に反映済みの場合は新しいマイグレーションを作成してください',
+    steps: [
+      {
+        commandId: 'sequelize-db-migrate-undo',
+        note: '最新のマイグレーションをロールバック（ローカルのみ反映の場合のみ実行可能）',
+      },
+      {
+        note: 'マイグレーションファイルを手動で修正',
+      },
+      {
+        commandId: 'sequelize-db-migrate',
+        note: '修正したマイグレーションを再実行',
+      },
+    ],
+  },
+  {
     id: 'supabase-local-development-workflow',
     category: 'supabase',
     name: 'Supabaseローカル開発ワークフロー',

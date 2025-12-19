@@ -4,56 +4,56 @@ export const transactions: Transaction[] = [
   {
     id: 'sequelize-db-init-workflow',
     category: 'sequelize',
-    name: 'Sequelize DB初期化',
-    description: 'データベースを作成し、既存のマイグレーションを実行する初期化の流れ',
+    name: 'Sequelize DB初期化（ローカル）',
+    description: 'ローカルデータベースを作成し、既存のマイグレーションを実行する初期化の流れ',
     steps: [
       {
         commandId: 'sequelize-db-create',
-        note: 'データベースを作成',
+        note: 'ローカルデータベースを作成',
       },
       {
         commandId: 'sequelize-db-migrate',
-        note: 'マイグレーションファイルがある場合は実行',
+        note: 'マイグレーションファイルがある場合はローカルDBに実行',
       },
     ],
   },
   {
     id: 'sequelize-new-table-workflow',
     category: 'sequelize',
-    name: 'Sequelize新規テーブル作成',
-    description: '新規テーブル作成時：モデルとマイグレーションを作成して実行する流れ',
+    name: 'Sequelize新規テーブル作成（ローカル）',
+    description: 'ローカルに新規テーブル作成時：モデルとマイグレーションを作成して実行する流れ',
     steps: [
       {
         commandId: 'sequelize-model-generate',
         optionIds: ['name', 'underscored'],
-        note: 'モデルとマイグレーションファイルを作成。attributesは後から追加でもOK',
+        note: 'ローカルにモデルとマイグレーションファイルを作成。attributesは後から追加でもOK',
       },
       {
         note: 'マイグレーションファイルを手動で編集（必要に応じて）',
       },
       {
         commandId: 'sequelize-db-migrate',
-        note: 'マイグレーションを実行',
+        note: 'ローカルDBにマイグレーションを実行',
       },
     ],
   },
   {
     id: 'sequelize-update-table-workflow',
     category: 'sequelize',
-    name: 'Sequelize既存テーブル更新',
-    description: '既存テーブル更新時：マイグレーションファイルを作成して実行する流れ',
+    name: 'Sequelize既存テーブル更新（ローカル）',
+    description: 'ローカルの既存テーブル更新時：マイグレーションファイルを作成して実行する流れ',
     steps: [
       {
         commandId: 'sequelize-migration-generate',
         optionIds: ['name'],
-        note: 'マイグレーションファイルのみ作成',
+        note: 'ローカルにマイグレーションファイルのみ作成',
       },
       {
         note: 'マイグレーションファイルを手動で編集',
       },
       {
         commandId: 'sequelize-db-migrate',
-        note: 'マイグレーションを実行',
+        note: 'ローカルDBにマイグレーションを実行',
       },
     ],
   },

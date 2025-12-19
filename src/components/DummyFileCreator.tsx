@@ -1,0 +1,582 @@
+import { useState } from 'react';
+import { Download, Plus, ChevronDown, ChevronUp, Terminal, Copy, Check } from 'lucide-react';
+
+type SizeUnit = 'B' | 'KB' | 'MB' | 'GB';
+type OSType = 'windows' | 'mac' | 'linux';
+
+type FileExtension =
+  | 'txt' | 'log' | 'csv' | 'json' | 'xml' | 'dat' // テキスト系
+  | 'jpg' | 'png' | 'gif' | 'bmp' | 'svg' // 画像
+  | 'mp4' | 'avi' | 'mov' | 'mkv' // 動画
+  | 'mp3' | 'wav' | 'ogg' | 'm4a'; // 音声
+
+const EXTENSION_GROUPS = {
+  'テキスト': ['txt', 'log', 'csv', 'json', 'xml', 'dat'] as const,
+  '画像': ['jpg', 'png', 'gif', 'bmp', 'svg'] as const,
+  '動画': ['mp4', 'avi', 'mov', 'mkv'] as const,
+  '音声': ['mp3', 'wav', 'ogg', 'm4a'] as const,
+};
+
+interface DummyFile {
+  id: string;
+  filename: string;
+  bytes: number;
+  extension: FileExtension;
+}
+
+export function DummyFileCreator() {
+  const [filename, setFilename] = useState('dummy');
+  const [size, setSize] = useState('10');
+  const [unit, setUnit] = useState<SizeUnit>('MB');
+  const [extension, setExtension] = useState<FileExtension>('txt');
+  const [boundaryTest, setBoundaryTest] = useState(false);
+  const [files, setFiles] = useState<DummyFile[]>([]);
+  const [showAlternatives, setShowAlternatives] = useState(false);
+  const [selectedOS, setSelectedOS] = useState<OSType>('windows');
+  const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
+
+  const calculateBytes = (sizeValue: number, sizeUnit: SizeUnit): number => {
+    const multipliers: Record<SizeUnit, number> = {
+      'B': 1,
+      'KB': 1024,
+      'MB': 1024 * 1024,
+      'GB': 1024 * 1024 * 1024,
+    };
+    return Math.floor(sizeValue * multipliers[sizeUnit]);
+  };
+
+  const downloadFile = (file: DummyFile) => {
+    // Uint8Arrayを使用して正確なバイト数のファイルを作成
+    const data = new Uint8Array(file.bytes);
+    const blob = new Blob([data], { type: 'application/octet-stream' });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', file.filename);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+
+    // クリーンアップを少し遅らせる
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+  };
+
+  const handleCreate = () => {
+    const sizeValue = parseFloat(size);
+
+    if (!filename.trim()) {
+      alert('ファイル名を入力してください');
+      return;
+    }
+
+    if (isNaN(sizeValue) || sizeValue <= 0) {
+      alert('有効なサイズを入力してください');
+      return;
+    }
+
+    const bytes = calculateBytes(sizeValue, unit);
+    const newFiles: DummyFile[] = [];
+    const timestamp = Date.now();
+
+    if (boundaryTest) {
+      // 境界テスト: -1バイト、指定サイズ、+1バイトの3ファイルを作成
+      const minusOneBytes = Math.max(0, bytes - 1);
+
+      if (minusOneBytes > 0) {
+        newFiles.push({
+          id: `${timestamp}-minus1-${Math.random()}`,
+          filename: `${filename}_minus1.${extension}`,
+          bytes: minusOneBytes,
+          extension,
+        });
+      }
+      newFiles.push({
+        id: `${timestamp}-exact-${Math.random()}`,
+        filename: `${filename}.${extension}`,
+        bytes: bytes,
+        extension,
+      });
+      newFiles.push({
+        id: `${timestamp}-plus1-${Math.random()}`,
+        filename: `${filename}_plus1.${extension}`,
+        bytes: bytes + 1,
+        extension,
+      });
+    } else {
+      // 通常: 指定サイズのファイルのみ作成
+      newFiles.push({
+        id: `${timestamp}-${Math.random()}`,
+        filename: `${filename}.${extension}`,
+        bytes: bytes,
+        extension,
+      });
+    }
+
+    setFiles(newFiles);
+  };
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  };
+
+  const displayBytes = () => {
+    const sizeValue = parseFloat(size);
+    if (isNaN(sizeValue) || sizeValue <= 0) return '0';
+    return calculateBytes(sizeValue, unit).toLocaleString();
+  };
+
+  const copyToClipboard = async (command: string) => {
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopiedCommand(command);
+      setTimeout(() => setCopiedCommand(null), 2000);
+    } catch (err) {
+      alert('コピーに失敗しました');
+    }
+  };
+
+  const generateCommands = (bytes: number, filenameSuffix: string = '') => {
+    const fullFilename = `${filename || 'dummy'}${filenameSuffix}.${extension}`;
+
+    // Mac用のサイズ計算
+    const getMacSize = (b: number): string => {
+      // 境界テストの±1バイトファイルは常にバイト単位で指定（サフィックスなし）
+      // 注意: bサフィックスはブロック単位（512バイト）になるため使用しない
+      if (filenameSuffix !== '') {
+        return `${b}`;
+      }
+
+      // 指定サイズそのものはユーザーが選択した単位を使用
+      if (unit === 'B') return `${b}`;
+      if (unit === 'KB') return `${Math.floor(b / 1024)}k`;
+      if (unit === 'MB') return `${Math.floor(b / (1024 * 1024))}m`;
+      if (unit === 'GB') return `${Math.floor(b / (1024 * 1024 * 1024))}g`;
+      return `${b}`;
+    };
+
+    const commands = {
+      windows: `fsutil file createnew ${fullFilename} ${bytes}`,
+      mac: {
+        mkfile: `mkfile ${getMacSize(bytes)} ${fullFilename}`,
+        dd: `dd if=/dev/zero of=${fullFilename} bs=1 count=${bytes}`,
+      },
+      linux: {
+        truncate: `truncate -s ${bytes} ${fullFilename}`,
+        fallocate: `fallocate -l ${bytes} ${fullFilename}`,
+        dd: `dd if=/dev/zero of=${fullFilename} bs=1 count=${bytes}`,
+      },
+    };
+
+    return commands;
+  };
+
+  const getCommandsForDisplay = () => {
+    const sizeValue = parseFloat(size);
+    if (isNaN(sizeValue) || sizeValue <= 0) {
+      return [];
+    }
+
+    const bytes = calculateBytes(sizeValue, unit);
+
+    if (boundaryTest) {
+      const minusOneBytes = Math.max(0, bytes - 1);
+      return [
+        { label: `${formatBytes(minusOneBytes)} (-1バイト)`, bytes: minusOneBytes, suffix: '_minus1' },
+        { label: `${formatBytes(bytes)} (指定サイズ)`, bytes: bytes, suffix: '' },
+        { label: `${formatBytes(bytes + 1)} (+1バイト)`, bytes: bytes + 1, suffix: '_plus1' },
+      ];
+    } else {
+      return [
+        { label: `${formatBytes(bytes)}`, bytes: bytes, suffix: '' },
+      ];
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <header className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">ダミーファイル作成</h1>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          指定したサイズと拡張子のダミーファイルを作成します。境界テスト用に±1バイトのファイルも同時作成できます。
+        </p>
+      </header>
+
+      <div className="space-y-4">
+        {/* ファイル名入力 */}
+        <div>
+          <label htmlFor="filename" className="block text-sm font-medium mb-2">
+            ファイル名（拡張子なし）
+          </label>
+          <input
+            id="filename"
+            type="text"
+            value={filename}
+            onChange={(e) => setFilename(e.target.value)}
+            className="w-full max-w-md px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-foreground"
+            placeholder="dummy"
+          />
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            プレビュー: {filename || 'dummy'}.{extension}
+            {boundaryTest && ` (+ ${filename || 'dummy'}_minus1.${extension}, ${filename || 'dummy'}_plus1.${extension})`}
+          </div>
+        </div>
+
+        {/* サイズ入力 */}
+        <div>
+          <label htmlFor="size" className="block text-sm font-medium mb-2">
+            ファイルサイズ
+          </label>
+          <div className="flex gap-2 max-w-md">
+            <input
+              id="size"
+              type="number"
+              min="0"
+              step="any"
+              value={size}
+              onChange={(e) => setSize(e.target.value)}
+              className="flex-1 px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-foreground"
+              placeholder="10"
+            />
+            <select
+              value={unit}
+              onChange={(e) => setUnit(e.target.value as SizeUnit)}
+              className="px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-foreground"
+            >
+              <option value="B">バイト (B)</option>
+              <option value="KB">キロバイト (KB)</option>
+              <option value="MB">メガバイト (MB)</option>
+              <option value="GB">ギガバイト (GB)</option>
+            </select>
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            = {displayBytes()} バイト
+          </div>
+        </div>
+
+        {/* 拡張子選択 */}
+        <div>
+          <label htmlFor="extension" className="block text-sm font-medium mb-2">
+            ファイル拡張子
+          </label>
+          <select
+            id="extension"
+            value={extension}
+            onChange={(e) => setExtension(e.target.value as FileExtension)}
+            className="w-full max-w-md px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-foreground"
+          >
+            {Object.entries(EXTENSION_GROUPS).map(([group, extensions]) => (
+              <optgroup key={group} label={group}>
+                {extensions.map((ext) => (
+                  <option key={ext} value={ext}>
+                    .{ext}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            すべての拡張子で正確なバイト数のファイルが作成されます
+          </div>
+        </div>
+
+        {/* 境界テストオプション */}
+        <div>
+          <label className="flex items-center gap-2 cursor-pointer max-w-md">
+            <input
+              type="checkbox"
+              checked={boundaryTest}
+              onChange={(e) => setBoundaryTest(e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-sm font-medium">
+              境界テストモード（±1バイトのファイルも作成）
+            </span>
+          </label>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+            チェックすると、指定サイズ-1バイト、指定サイズ、指定サイズ+1バイトの3つのファイルを作成します
+          </div>
+        </div>
+
+        {/* 作成ボタン */}
+        <div className="pt-2">
+          <button
+            onClick={handleCreate}
+            className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium"
+          >
+            <Plus size={20} />
+            <span>ファイルを作成</span>
+          </button>
+        </div>
+
+        {/* ファイル一覧テーブル */}
+        {files.length > 0 && (
+          <div className="mt-8">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold">作成されたファイル一覧</h2>
+            </div>
+
+            <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">ファイル名</th>
+                    <th className="px-4 py-3 text-left font-medium">サイズ</th>
+                    <th className="px-4 py-3 text-left font-medium">正確なバイト数</th>
+                    <th className="px-4 py-3 text-center font-medium">ダウンロード</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {files.map((file) => (
+                    <tr key={file.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <td className="px-4 py-3 font-mono text-xs sm:text-sm">{file.filename}</td>
+                      <td className="px-4 py-3">{formatBytes(file.bytes)}</td>
+                      <td className="px-4 py-3 font-mono text-xs">{file.bytes.toLocaleString()} bytes</td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => downloadFile(file)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs sm:text-sm"
+                        >
+                          <Download size={16} />
+                          <span>ダウンロード</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* 代替案セクション */}
+        <div className="mt-8 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowAlternatives(!showAlternatives)}
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Terminal size={20} className="text-gray-600 dark:text-gray-400" />
+              <span className="font-medium">どうしてもダウンロードできない場合の代替案（コマンドライン）</span>
+            </div>
+            {showAlternatives ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </button>
+
+          {showAlternatives && (
+            <div className="px-4 py-4 space-y-6">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                ブラウザでのダウンロードがうまくいかない場合、以下のコマンドでターミナルから直接ダミーファイルを作成できます。
+              </p>
+
+              {/* OS選択ボタン */}
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setSelectedOS('windows')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    selectedOS === 'windows'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  Windows
+                </button>
+                <button
+                  onClick={() => setSelectedOS('mac')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    selectedOS === 'mac'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  Mac
+                </button>
+                <button
+                  onClick={() => setSelectedOS('linux')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    selectedOS === 'linux'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  Linux
+                </button>
+              </div>
+
+              {/* コマンド表示 */}
+              <div className="space-y-4">
+                {getCommandsForDisplay().map((item, index) => {
+                  const commands = generateCommands(item.bytes, item.suffix);
+
+                  return (
+                    <div key={index} className="space-y-3">
+                      {boundaryTest && (
+                        <h4 className="font-semibold text-sm">{item.label}</h4>
+                      )}
+
+                      {/* Windows */}
+                      {selectedOS === 'windows' && (
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            PowerShell または コマンドプロンプト
+                          </p>
+                          <div className="relative">
+                            <div className="bg-gray-900 text-gray-100 rounded p-3 pr-12 font-mono text-xs sm:text-sm overflow-x-auto">
+                              <code>{commands.windows}</code>
+                            </div>
+                            <button
+                              onClick={() => copyToClipboard(commands.windows)}
+                              className="absolute top-2 right-2 p-2 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
+                              title="コピー"
+                            >
+                              {copiedCommand === commands.windows ? (
+                                <Check size={16} className="text-green-400" />
+                              ) : (
+                                <Copy size={16} className="text-gray-300" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mac */}
+                      {selectedOS === 'mac' && (
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm font-medium mb-1">方法1: mkfile（推奨）</p>
+                            <div className="relative">
+                              <div className="bg-gray-900 text-gray-100 rounded p-3 pr-12 font-mono text-xs sm:text-sm overflow-x-auto">
+                                <code>{commands.mac.mkfile}</code>
+                              </div>
+                              <button
+                                onClick={() => copyToClipboard(commands.mac.mkfile)}
+                                className="absolute top-2 right-2 p-2 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
+                                title="コピー"
+                              >
+                                {copiedCommand === commands.mac.mkfile ? (
+                                  <Check size={16} className="text-green-400" />
+                                ) : (
+                                  <Copy size={16} className="text-gray-300" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium mb-1">方法2: dd</p>
+                            <div className="relative">
+                              <div className="bg-gray-900 text-gray-100 rounded p-3 pr-12 font-mono text-xs sm:text-sm overflow-x-auto">
+                                <code>{commands.mac.dd}</code>
+                              </div>
+                              <button
+                                onClick={() => copyToClipboard(commands.mac.dd)}
+                                className="absolute top-2 right-2 p-2 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
+                                title="コピー"
+                              >
+                                {copiedCommand === commands.mac.dd ? (
+                                  <Check size={16} className="text-green-400" />
+                                ) : (
+                                  <Copy size={16} className="text-gray-300" />
+                                )}
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              大きなファイルの場合は bs=1048576 count=X のようにブロックサイズを調整してください
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Linux */}
+                      {selectedOS === 'linux' && (
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm font-medium mb-1">方法1: truncate（推奨・最速）</p>
+                            <div className="relative">
+                              <div className="bg-gray-900 text-gray-100 rounded p-3 pr-12 font-mono text-xs sm:text-sm overflow-x-auto">
+                                <code>{commands.linux.truncate}</code>
+                              </div>
+                              <button
+                                onClick={() => copyToClipboard(commands.linux.truncate)}
+                                className="absolute top-2 right-2 p-2 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
+                                title="コピー"
+                              >
+                                {copiedCommand === commands.linux.truncate ? (
+                                  <Check size={16} className="text-green-400" />
+                                ) : (
+                                  <Copy size={16} className="text-gray-300" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium mb-1">方法2: fallocate（高速）</p>
+                            <div className="relative">
+                              <div className="bg-gray-900 text-gray-100 rounded p-3 pr-12 font-mono text-xs sm:text-sm overflow-x-auto">
+                                <code>{commands.linux.fallocate}</code>
+                              </div>
+                              <button
+                                onClick={() => copyToClipboard(commands.linux.fallocate)}
+                                className="absolute top-2 right-2 p-2 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
+                                title="コピー"
+                              >
+                                {copiedCommand === commands.linux.fallocate ? (
+                                  <Check size={16} className="text-green-400" />
+                                ) : (
+                                  <Copy size={16} className="text-gray-300" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium mb-1">方法3: dd（汎用的）</p>
+                            <div className="relative">
+                              <div className="bg-gray-900 text-gray-100 rounded p-3 pr-12 font-mono text-xs sm:text-sm overflow-x-auto">
+                                <code>{commands.linux.dd}</code>
+                              </div>
+                              <button
+                                onClick={() => copyToClipboard(commands.linux.dd)}
+                                className="absolute top-2 right-2 p-2 rounded bg-gray-700 hover:bg-gray-600 transition-colors"
+                                title="コピー"
+                              >
+                                {copiedCommand === commands.linux.dd ? (
+                                  <Check size={16} className="text-green-400" />
+                                ) : (
+                                  <Copy size={16} className="text-gray-300" />
+                                )}
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              大きなファイルの場合は bs=1M count=X のようにブロックサイズを調整してください
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {boundaryTest && index < getCommandsForDisplay().length - 1 && (
+                        <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 注意事項 */}
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>注意:</strong> 上記のコマンド例は現在の入力値に基づいています。
+                  {boundaryTest && '境界テストモードでは、-1バイト、指定サイズ、+1バイトの3つのコマンドが表示されます。'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

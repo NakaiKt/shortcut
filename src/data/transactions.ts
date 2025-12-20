@@ -166,4 +166,24 @@ export const transactions: Transaction[] = [
       },
     ],
   },
+  {
+    id: 'supabase-clean-restart-workflow',
+    category: 'supabase',
+    name: 'Supabaseクリーン再起動',
+    description: 'Supabaseを停止し、未使用コンテナを削除してから再起動する完全クリーンアップフロー',
+    steps: [
+      {
+        commandId: 'supabase-stop',
+        note: 'ローカル環境を停止',
+      },
+      {
+        commandId: 'docker-container-prune',
+        note: '未使用コンテナを削除',
+      },
+      {
+        commandId: 'supabase-start',
+        note: 'ローカル環境を再起動',
+      },
+    ],
+  },
 ];

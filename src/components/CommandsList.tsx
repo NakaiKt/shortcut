@@ -28,7 +28,9 @@ export function CommandsList() {
         const query = searchQuery.toLowerCase();
         const matchName = command.name.toLowerCase().includes(query);
         const matchDescription = command.description.toLowerCase().includes(query);
-        return matchName || matchDescription;
+        const matchWindowsCommand = command.windowsCommand.toLowerCase().includes(query);
+        const matchMacCommand = command.macCommand.toLowerCase().includes(query);
+        return matchName || matchDescription || matchWindowsCommand || matchMacCommand;
       }
 
       return true;

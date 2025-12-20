@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Database cylinder -->
+  <ellipse cx="50" cy="30" rx="35" ry="12" fill="#3b82f6" stroke="#1e40af" stroke-width="2"/>
+  <rect x="15" y="30" width="70" height="40" fill="#3b82f6"/>
+  <ellipse cx="50" cy="70" rx="35" ry="12" fill="#2563eb" stroke="#1e40af" stroke-width="2"/>
+  <ellipse cx="50" cy="30" rx="35" ry="12" fill="#60a5fa" opacity="0.7"/>
+
+  <!-- Command symbol (⌘-like) -->
+  <g transform="translate(50, 52)">
+    <!-- Keyboard key background -->
+    <rect x="-12" y="-12" width="24" height="24" rx="3" fill="#fbbf24" stroke="#d97706" stroke-width="1.5"/>
+    <!-- Terminal prompt symbol -->
+    <text x="0" y="6" font-family="monospace" font-size="18" font-weight="bold" fill="#78350f" text-anchor="middle">$</text>
+  </g>
+</svg>

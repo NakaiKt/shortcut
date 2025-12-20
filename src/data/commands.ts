@@ -319,7 +319,7 @@ export const commands: Command[] = [
     id: 'docker-container-prune',
     category: 'docker',
     name: '未使用コンテナ削除',
-    description: '停止中の未使用Dockerコンテナをすべて削除します',
+    description: '停止中の未使用コンテナをすべて削除します',
     windowsCommand: 'docker container prune -f',
     macCommand: 'docker container prune -f',
   },

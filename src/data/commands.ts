@@ -324,6 +324,34 @@ export const commands: Command[] = [
     macCommand: 'docker container prune -f',
   },
   {
+    id: 'git-restore-from-branch',
+    category: 'git',
+    name: '特定ファイルを別ブランチの状態に戻す',
+    description: '特定のファイルを指定したブランチの状態に戻します（変更を取り消す）',
+    windowsCommand: 'git restore --source={ブランチ名} -- {ファイルパス}',
+    macCommand: 'git restore --source={ブランチ名} -- {ファイルパス}',
+    options: [
+      {
+        id: 'develop',
+        windows: '--source=develop',
+        mac: '--source=develop',
+        description: 'developブランチから復元',
+      },
+      {
+        id: 'main',
+        windows: '--source=main',
+        mac: '--source=main',
+        description: 'mainブランチから復元',
+      },
+      {
+        id: 'multiple-files',
+        windows: '-- {ファイル1} {ファイル2} {ファイル3}',
+        mac: '-- {ファイル1} {ファイル2} {ファイル3}',
+        description: '複数ファイルを一度に復元',
+      },
+    ],
+  },
+  {
     id: 'console-history',
     category: 'console',
     name: 'コマンド履歴表示',

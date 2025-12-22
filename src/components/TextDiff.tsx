@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { GitCompare, Copy, Check } from 'lucide-react';
+import { GitCompare, Plus, ArrowLeftRight, Trash2 } from 'lucide-react';
 import DiffMatchPatch from 'diff-match-patch';
 
 type ViewMode = 'split' | 'unified';
@@ -21,18 +21,97 @@ interface SplitDiffLine {
   right: DiffLine;
 }
 
+interface SavedText {
+  id: string;
+  name: string;
+  content: string;
+}
+
 export function TextDiff() {
-  const [text1, setText1] = useState('');
-  const [text2, setText2] = useState('');
+  // テキストストック管理
+  const [savedTexts, setSavedTexts] = useState<SavedText[]>([
+    { id: '1', name: 'テキスト1', content: '' },
+    { id: '2', name: 'テキスト2', content: '' }
+  ]);
+  const [leftTextId, setLeftTextId] = useState<string>('1');
+  const [rightTextId, setRightTextId] = useState<string>('2');
+
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const [ignoreCase, setIgnoreCase] = useState(false);
-  const [copiedSide, setCopiedSide] = useState<'left' | 'right' | null>(null);
+
+  // 左右のテキストを取得
+  const leftText = savedTexts.find(t => t.id === leftTextId);
+  const rightText = savedTexts.find(t => t.id === rightTextId);
+  const text1 = leftText?.content || '';
+  const text2 = rightText?.content || '';
 
   // スクロール同期用のref
   const leftScrollRef = useRef<HTMLDivElement>(null);
   const rightScrollRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
+
+  // 次の連番を取得
+  const getNextTextNumber = (): number => {
+    const numbers = savedTexts.map(t => {
+      const match = t.name.match(/^テキスト(\d+)$/);
+      return match ? parseInt(match[1]) : 0;
+    });
+    return Math.max(...numbers, 0) + 1;
+  };
+
+  // テキストを追加
+  const addNewText = (side: 'left' | 'right') => {
+    const nextNumber = getNextTextNumber();
+    const newText: SavedText = {
+      id: Date.now().toString(),
+      name: `テキスト${nextNumber}`,
+      content: ''
+    };
+    setSavedTexts([...savedTexts, newText]);
+    if (side === 'left') {
+      setLeftTextId(newText.id);
+    } else {
+      setRightTextId(newText.id);
+    }
+  };
+
+  // テキストを削除
+  const deleteText = (id: string) => {
+    // 使用中のテキストは削除不可
+    if (id === leftTextId || id === rightTextId) return;
+    setSavedTexts(savedTexts.filter(t => t.id !== id));
+  };
+
+  // 左右に配置
+  const assignToSide = (id: string, side: 'left' | 'right') => {
+    if (side === 'left') {
+      setLeftTextId(id);
+    } else {
+      setRightTextId(id);
+    }
+  };
+
+  // 左右を入れ替え
+  const swapTexts = () => {
+    const tempId = leftTextId;
+    setLeftTextId(rightTextId);
+    setRightTextId(tempId);
+  };
+
+  // タイトルを更新
+  const updateTextName = (id: string, newName: string) => {
+    setSavedTexts(savedTexts.map(t =>
+      t.id === id ? { ...t, name: newName } : t
+    ));
+  };
+
+  // 内容を更新
+  const updateTextContent = (id: string, newContent: string) => {
+    setSavedTexts(savedTexts.map(t =>
+      t.id === id ? { ...t, content: newContent } : t
+    ));
+  };
 
   // 行単位の差分計算（Gitスタイル）
   const diffResult = useMemo(() => {
@@ -264,14 +343,6 @@ export function TextDiff() {
     return lines;
   }, [diffResult]);
 
-  // コピー機能
-  const handleCopy = (side: 'left' | 'right') => {
-    const textToCopy = side === 'left' ? text1 : text2;
-    navigator.clipboard.writeText(textToCopy);
-    setCopiedSide(side);
-    setTimeout(() => setCopiedSide(null), 2000);
-  };
-
   // 行のスタイルを取得
   const getLineStyle = (type: DiffLine['type']) => {
     switch (type) {
@@ -424,71 +495,152 @@ export function TextDiff() {
         </div>
       </div>
 
+      {/* テキストストック領域 */}
+      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+          📚 テキストストック ({savedTexts.length}件)
+        </h3>
+        <div className="max-h-48 overflow-y-auto space-y-2">
+          {savedTexts.map(text => {
+            const isLeft = text.id === leftTextId;
+            const isRight = text.id === rightTextId;
+            const isUsed = isLeft || isRight;
+
+            return (
+              <div
+                key={text.id}
+                className={`flex items-center justify-between p-2 sm:p-3 rounded-lg border transition-colors ${
+                  isUsed
+                    ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700'
+                    : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                }`}
+              >
+                <div className="flex-1 min-w-0 mr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-medium truncate">
+                      {text.name}
+                    </span>
+                    {isUsed && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 whitespace-nowrap">
+                        ✓使用中({isLeft ? '左' : '右'})
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {!isUsed && (
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <button
+                      onClick={() => assignToSide(text.id, 'left')}
+                      className="p-1 sm:p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors"
+                      title="左に配置"
+                    >
+                      <span className="text-xs sm:text-sm">←</span>
+                    </button>
+                    <button
+                      onClick={() => assignToSide(text.id, 'right')}
+                      className="p-1 sm:p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors"
+                      title="右に配置"
+                    >
+                      <span className="text-xs sm:text-sm">→</span>
+                    </button>
+                    <button
+                      onClick={() => deleteText(text.id)}
+                      className="p-1 sm:p-1.5 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 rounded transition-colors"
+                      title="削除"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 入力エリア */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 mb-4 sm:mb-6">
         {/* 左側テキスト */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium">
-              テキスト 1（変更前）
+              タイトル:
             </label>
             <button
-              onClick={() => handleCopy('left')}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-              title="コピー"
+              onClick={() => addNewText('left')}
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded transition-colors"
+              title="テキストを追加"
             >
-              {copiedSide === 'left' ? (
-                <>
-                  <Check size={16} className="text-green-600 dark:text-green-400" />
-                  <span className="text-green-600 dark:text-green-400">コピー完了</span>
-                </>
-              ) : (
-                <>
-                  <Copy size={16} />
-                  <span className="hidden sm:inline">コピー</span>
-                </>
-              )}
+              <Plus size={16} />
+              <span className="hidden sm:inline">テキストを追加</span>
             </button>
           </div>
+          <input
+            type="text"
+            value={leftText?.name || ''}
+            onChange={(e) => leftText && updateTextName(leftText.id, e.target.value)}
+            className="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-background text-foreground"
+            placeholder="テキスト名"
+          />
           <textarea
             value={text1}
-            onChange={(e) => setText1(e.target.value)}
+            onChange={(e) => leftText && updateTextContent(leftText.id, e.target.value)}
             className="w-full h-32 sm:h-48 px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs sm:text-sm resize-y bg-background text-foreground"
-            placeholder="比較元のテキストを入力..."
+            placeholder="テキストを入力..."
           />
+        </div>
+
+        {/* 入れ替えボタン */}
+        <div className="hidden lg:flex items-center justify-center">
+          <button
+            onClick={swapTexts}
+            className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            title="左右を入れ替え"
+          >
+            <ArrowLeftRight size={20} />
+          </button>
         </div>
 
         {/* 右側テキスト */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium">
-              テキスト 2（変更後）
+              タイトル:
             </label>
             <button
-              onClick={() => handleCopy('right')}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-              title="コピー"
+              onClick={() => addNewText('right')}
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded transition-colors"
+              title="テキストを追加"
             >
-              {copiedSide === 'right' ? (
-                <>
-                  <Check size={16} className="text-green-600 dark:text-green-400" />
-                  <span className="text-green-600 dark:text-green-400">コピー完了</span>
-                </>
-              ) : (
-                <>
-                  <Copy size={16} />
-                  <span className="hidden sm:inline">コピー</span>
-                </>
-              )}
+              <Plus size={16} />
+              <span className="hidden sm:inline">テキストを追加</span>
             </button>
           </div>
+          <input
+            type="text"
+            value={rightText?.name || ''}
+            onChange={(e) => rightText && updateTextName(rightText.id, e.target.value)}
+            className="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-background text-foreground"
+            placeholder="テキスト名"
+          />
           <textarea
             value={text2}
-            onChange={(e) => setText2(e.target.value)}
+            onChange={(e) => rightText && updateTextContent(rightText.id, e.target.value)}
             className="w-full h-32 sm:h-48 px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs sm:text-sm resize-y bg-background text-foreground"
-            placeholder="比較先のテキストを入力..."
+            placeholder="テキストを入力..."
           />
         </div>
+      </div>
+
+      {/* モバイル用入れ替えボタン */}
+      <div className="lg:hidden mb-4">
+        <button
+          onClick={swapTexts}
+          className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
+          <ArrowLeftRight size={18} />
+          左右を入れ替え
+        </button>
       </div>
 
       {/* 差分表示エリア */}

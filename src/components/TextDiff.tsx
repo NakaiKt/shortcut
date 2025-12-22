@@ -568,7 +568,7 @@ export function TextDiff() {
             </label>
             <button
               onClick={() => addNewText('left')}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded transition-colors"
               title="テキストを追加"
             >
               <Plus size={16} />
@@ -609,7 +609,7 @@ export function TextDiff() {
             </label>
             <button
               onClick={() => addNewText('right')}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded transition-colors"
               title="テキストを追加"
             >
               <Plus size={16} />

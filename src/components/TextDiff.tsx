@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { GitCompare, Copy, Check, Plus, ArrowLeftRight, Trash2 } from 'lucide-react';
+import { GitCompare, Plus, ArrowLeftRight, Trash2 } from 'lucide-react';
 import DiffMatchPatch from 'diff-match-patch';
 
 type ViewMode = 'split' | 'unified';
@@ -39,7 +39,6 @@ export function TextDiff() {
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const [ignoreCase, setIgnoreCase] = useState(false);
-  const [copiedSide, setCopiedSide] = useState<'left' | 'right' | null>(null);
 
   // 左右のテキストを取得
   const leftText = savedTexts.find(t => t.id === leftTextId);
@@ -344,14 +343,6 @@ export function TextDiff() {
     return lines;
   }, [diffResult]);
 
-  // コピー機能
-  const handleCopy = (side: 'left' | 'right') => {
-    const textToCopy = side === 'left' ? text1 : text2;
-    navigator.clipboard.writeText(textToCopy);
-    setCopiedSide(side);
-    setTimeout(() => setCopiedSide(null), 2000);
-  };
-
   // 行のスタイルを取得
   const getLineStyle = (type: DiffLine['type']) => {
     switch (type) {
@@ -576,21 +567,12 @@ export function TextDiff() {
               タイトル:
             </label>
             <button
-              onClick={() => handleCopy('left')}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-              title="コピー"
+              onClick={() => addNewText('left')}
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+              title="テキストを追加"
             >
-              {copiedSide === 'left' ? (
-                <>
-                  <Check size={16} className="text-green-600 dark:text-green-400" />
-                  <span className="text-green-600 dark:text-green-400">コピー完了</span>
-                </>
-              ) : (
-                <>
-                  <Copy size={16} />
-                  <span className="hidden sm:inline">コピー</span>
-                </>
-              )}
+              <Plus size={16} />
+              <span className="hidden sm:inline">テキストを追加</span>
             </button>
           </div>
           <input
@@ -600,13 +582,6 @@ export function TextDiff() {
             className="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-background text-foreground"
             placeholder="テキスト名"
           />
-          <button
-            onClick={() => addNewText('left')}
-            className="w-full mb-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-          >
-            <Plus size={16} />
-            テキストを追加
-          </button>
           <textarea
             value={text1}
             onChange={(e) => leftText && updateTextContent(leftText.id, e.target.value)}
@@ -633,21 +608,12 @@ export function TextDiff() {
               タイトル:
             </label>
             <button
-              onClick={() => handleCopy('right')}
-              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-              title="コピー"
+              onClick={() => addNewText('right')}
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 text-xs sm:text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+              title="テキストを追加"
             >
-              {copiedSide === 'right' ? (
-                <>
-                  <Check size={16} className="text-green-600 dark:text-green-400" />
-                  <span className="text-green-600 dark:text-green-400">コピー完了</span>
-                </>
-              ) : (
-                <>
-                  <Copy size={16} />
-                  <span className="hidden sm:inline">コピー</span>
-                </>
-              )}
+              <Plus size={16} />
+              <span className="hidden sm:inline">テキストを追加</span>
             </button>
           </div>
           <input
@@ -657,13 +623,6 @@ export function TextDiff() {
             className="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-background text-foreground"
             placeholder="テキスト名"
           />
-          <button
-            onClick={() => addNewText('right')}
-            className="w-full mb-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-          >
-            <Plus size={16} />
-            テキストを追加
-          </button>
           <textarea
             value={text2}
             onChange={(e) => rightText && updateTextContent(rightText.id, e.target.value)}

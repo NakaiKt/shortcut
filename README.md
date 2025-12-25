@@ -66,6 +66,5 @@ src/
   description: 'すべてのコマンドにアクセス',
   windowsKey: 'Ctrl + Shift + P',
   macKey: 'Cmd + Shift + P',
-  isCommand: false,
 }
 ```

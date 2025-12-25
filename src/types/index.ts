@@ -9,10 +9,8 @@ export interface Shortcut {
   tool: Tool;
   name: string;
   description: string;
-  windowsKey?: string;
-  macKey?: string;
-  command?: string;
-  isCommand: boolean;
+  windowsKey: string;
+  macKey: string;
 }
 
 export interface CommandOption {

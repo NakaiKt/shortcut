@@ -12,7 +12,6 @@ export const shortcuts: Shortcut[] = [
     description: 'プロジェクト内のファイルをクイック検索',
     windowsKey: 'Ctrl + P',
     macKey: 'Cmd + P',
-    isCommand: false,
   },
   {
     id: '2',
@@ -21,7 +20,6 @@ export const shortcuts: Shortcut[] = [
     description: 'ノート内のファイルをクイック検索',
     windowsKey: 'Ctrl + O',
     macKey: 'Cmd + O',
-    isCommand: false,
   },
   {
     id: '3',
@@ -30,7 +28,6 @@ export const shortcuts: Shortcut[] = [
     description: 'ワークスペース内のファイル名検索',
     windowsKey: 'Ctrl + P',
     macKey: 'Cmd + P',
-    isCommand: false,
   },
   {
     id: '4',
@@ -39,7 +36,6 @@ export const shortcuts: Shortcut[] = [
     description: 'コマンドラインの先頭にカーソルを移動します',
     windowsKey: 'Ctrl + A',
     macKey: 'Ctrl + A',
-    isCommand: false,
   },
   {
     id: '5',
@@ -48,7 +44,6 @@ export const shortcuts: Shortcut[] = [
     description: 'コマンドラインの末尾にカーソルを移動します',
     windowsKey: 'Ctrl + E',
     macKey: 'Ctrl + E',
-    isCommand: false,
   },
   {
     id: '6',
@@ -57,7 +52,6 @@ export const shortcuts: Shortcut[] = [
     description: '単語の塊ごとに前へカーソルを移動します',
     windowsKey: 'Ctrl + ←',
     macKey: 'Option + ←',
-    isCommand: false,
   },
   {
     id: '7',
@@ -66,7 +60,6 @@ export const shortcuts: Shortcut[] = [
     description: '単語の塊ごとに後ろへカーソルを移動します',
     windowsKey: 'Ctrl + →',
     macKey: 'Option + →',
-    isCommand: false,
   },
   {
     id: '8',
@@ -75,6 +68,5 @@ export const shortcuts: Shortcut[] = [
     description: '現在のファイル内でテキストを検索して置換',
     windowsKey: 'Ctrl + H',
     macKey: 'Cmd + Option + F',
-    isCommand: false,
   },
 ];

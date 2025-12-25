@@ -26,18 +26,12 @@ export function ShortcutCard({ shortcut, os }: ShortcutCardProps) {
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">{shortcut.description}</p>
 
-        {shortcut.isCommand && shortcut.command ? (
-          <div className="rounded-md bg-muted p-3">
-            <code className="text-sm font-mono">{shortcut.command}</code>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Keyboard className="h-4 w-4 text-muted-foreground" />
-            <kbd className="rounded border bg-muted px-2 py-1 text-sm font-semibold">
-              {displayKey}
-            </kbd>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <Keyboard className="h-4 w-4 text-muted-foreground" />
+          <kbd className="rounded border bg-muted px-2 py-1 text-sm font-semibold">
+            {displayKey}
+          </kbd>
+        </div>
       </CardContent>
     </Card>
   );

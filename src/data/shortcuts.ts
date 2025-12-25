@@ -68,4 +68,13 @@ export const shortcuts: Shortcut[] = [
     macKey: 'Option + →',
     isCommand: false,
   },
+  {
+    id: '8',
+    tool: 'obsidian',
+    name: 'ファイル内検索と置換',
+    description: '現在のファイル内でテキストを検索して置換',
+    windowsKey: 'Ctrl + H',
+    macKey: 'Cmd + Option + F',
+    isCommand: false,
+  },
 ];

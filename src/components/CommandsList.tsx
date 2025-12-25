@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { CommandCategory } from '../types';
+import { OS, CommandCategory } from '../types';
 import { commands } from '../data/commands';
 import { transactions } from '../data/transactions';
 import { SearchBar } from './SearchBar';
@@ -8,10 +8,13 @@ import { CategoryFilter } from './CategoryFilter';
 import { CommandCard } from './CommandCard';
 import { TransactionCard } from './TransactionCard';
 import { ViewTypeToggle, ViewType } from './ViewTypeToggle';
-import { useOS } from '../hooks/useOS';
+import { detectOS } from '../utils/detectOS';
 
 export function CommandsList() {
-  const { os, setOS } = useOS();
+  const [os, setOS] = useState<OS>(() => {
+    const detectedOS = detectOS();
+    return detectedOS === 'linux' ? 'windows' : detectedOS;
+  });
   const [selectedCategories, setSelectedCategories] = useState<CommandCategory[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewType, setViewType] = useState<ViewType>('command');

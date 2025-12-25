@@ -1,14 +1,17 @@
 import { useState, useMemo } from 'react';
-import { Tool } from '../types';
+import { OS, Tool } from '../types';
 import { shortcuts } from '../data/shortcuts';
 import { SearchBar } from './SearchBar';
 import { OSToggle } from './OSToggle';
 import { ToolFilter } from './ToolFilter';
 import { ShortcutCard } from './ShortcutCard';
-import { useOS } from '../hooks/useOS';
+import { detectOS } from '../utils/detectOS';
 
 export function ShortcutsList() {
-  const { os, setOS } = useOS();
+  const [os, setOS] = useState<OS>(() => {
+    const detectedOS = detectOS();
+    return detectedOS === 'linux' ? 'windows' : detectedOS;
+  });
   const [selectedTools, setSelectedTools] = useState<Tool[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 

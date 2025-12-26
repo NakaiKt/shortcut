@@ -1,5 +1,5 @@
-import { useState, useMemo, useRef } from 'react';
-import { GitCompare, Plus, ArrowLeftRight, Trash2 } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { GitCompare, Plus, ArrowLeftRight, Trash2, Settings } from 'lucide-react';
 import DiffMatchPatch from 'diff-match-patch';
 
 type ViewMode = 'split' | 'unified';
@@ -39,6 +39,8 @@ export function TextDiff() {
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(true);
   const [ignoreCase, setIgnoreCase] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
 
   // 左右のテキストを取得
   const leftText = savedTexts.find(t => t.id === leftTextId);
@@ -414,6 +416,23 @@ export function TextDiff() {
     }
   };
 
+  // Popoverの外側クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    if (isSettingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSettingsOpen]);
+
   return (
     <div className="max-w-7xl mx-auto">
       <header className="mb-4 sm:mb-6">
@@ -426,71 +445,87 @@ export function TextDiff() {
         </p>
       </header>
 
-      {/* 設定パネル */}
+      {/* 統計情報と設定 */}
       <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-4 lg:gap-6">
-          {/* 表示モード切替 */}
-          <div className="w-full lg:w-auto">
-            <label className="block text-sm font-medium mb-2">表示モード</label>
-            <div className="flex gap-2 w-full">
-              <button
-                onClick={() => setViewMode('split')}
-                className={`flex-1 lg:flex-initial px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                  viewMode === 'split'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
-                }`}
-              >
-                Split View
-              </button>
-              <button
-                onClick={() => setViewMode('unified')}
-                className={`flex-1 lg:flex-initial px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                  viewMode === 'unified'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
-                }`}
-              >
-                Unified View
-              </button>
-            </div>
+        <div className="flex items-center justify-between gap-4">
+          {/* 統計情報 */}
+          <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
+            <span className="text-green-600 dark:text-green-400 font-medium">
+              +{stats.additions} 追加
+            </span>
+            <span className="text-red-600 dark:text-red-400 font-medium">
+              -{stats.deletions} 削除
+            </span>
           </div>
 
-          {/* オプション */}
-          <div className="flex flex-col gap-2 w-full lg:w-auto">
-            <label className="text-sm font-medium">オプション</label>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={ignoreWhitespace}
-                  onChange={(e) => setIgnoreWhitespace(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm">スペースを無視</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={ignoreCase}
-                  onChange={(e) => setIgnoreCase(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm">大文字小文字を無視</span>
-              </label>
-            </div>
-          </div>
+          {/* 設定アイコン */}
+          <div className="relative" ref={settingsRef}>
+            <button
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="設定"
+            >
+              <Settings size={20} />
+            </button>
 
-          {/* 統計 */}
-          <div className="w-full lg:w-auto lg:ml-auto">
-            <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
-              <span className="text-green-600 dark:text-green-400 font-medium">
-                +{stats.additions} 追加
-              </span>
-              <span className="text-red-600 dark:text-red-400 font-medium">
-                -{stats.deletions} 削除
-              </span>
-            </div>
+            {/* Popover */}
+            {isSettingsOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                <div className="p-4 space-y-4">
+                  {/* 表示モード切替 */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">表示モード</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setViewMode('split')}
+                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          viewMode === 'split'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        Split View
+                      </button>
+                      <button
+                        onClick={() => setViewMode('unified')}
+                        className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          viewMode === 'unified'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        Unified View
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* オプション */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">オプション</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={ignoreWhitespace}
+                          onChange={(e) => setIgnoreWhitespace(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span className="text-sm">スペースを無視</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={ignoreCase}
+                          onChange={(e) => setIgnoreCase(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span className="text-sm">大文字小文字を無視</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

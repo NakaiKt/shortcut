@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Download, Plus, ChevronDown, ChevronUp, Terminal, Copy, Check } from 'lucide-react';
+import { detectOS } from '../utils/detectOS';
 
 type SizeUnit = 'B' | 'KB' | 'MB' | 'GB';
 type OSType = 'windows' | 'mac' | 'linux';
@@ -32,7 +33,7 @@ export function DummyFileCreator() {
   const [boundaryTest, setBoundaryTest] = useState(false);
   const [files, setFiles] = useState<DummyFile[]>([]);
   const [showAlternatives, setShowAlternatives] = useState(false);
-  const [selectedOS, setSelectedOS] = useState<OSType>('windows');
+  const [selectedOS, setSelectedOS] = useState<OSType>(() => detectOS());
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
 
   const calculateBytes = (sizeValue: number, sizeUnit: SizeUnit): number => {

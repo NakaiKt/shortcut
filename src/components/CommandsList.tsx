@@ -8,9 +8,13 @@ import { CategoryFilter } from './CategoryFilter';
 import { CommandCard } from './CommandCard';
 import { TransactionCard } from './TransactionCard';
 import { ViewTypeToggle, ViewType } from './ViewTypeToggle';
+import { detectOS } from '../utils/detectOS';
 
 export function CommandsList() {
-  const [os, setOS] = useState<OS>('windows');
+  const [os, setOS] = useState<OS>(() => {
+    const detectedOS = detectOS();
+    return detectedOS === 'linux' ? 'windows' : detectedOS;
+  });
   const [selectedCategories, setSelectedCategories] = useState<CommandCategory[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewType, setViewType] = useState<ViewType>('command');

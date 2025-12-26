@@ -5,9 +5,13 @@ import { SearchBar } from './SearchBar';
 import { OSToggle } from './OSToggle';
 import { ToolFilter } from './ToolFilter';
 import { ShortcutCard } from './ShortcutCard';
+import { detectOS } from '../utils/detectOS';
 
 export function ShortcutsList() {
-  const [os, setOS] = useState<OS>('windows');
+  const [os, setOS] = useState<OS>(() => {
+    const detectedOS = detectOS();
+    return detectedOS === 'linux' ? 'windows' : detectedOS;
+  });
   const [selectedTools, setSelectedTools] = useState<Tool[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 

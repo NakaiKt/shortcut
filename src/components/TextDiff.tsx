@@ -445,18 +445,12 @@ export function TextDiff() {
         </p>
       </header>
 
-      {/* 統計情報と設定 */}
+      {/* テキストストック領域 */}
       <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between gap-4">
-          {/* 統計情報 */}
-          <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
-            <span className="text-green-600 dark:text-green-400 font-medium">
-              +{stats.additions} 追加
-            </span>
-            <span className="text-red-600 dark:text-red-400 font-medium">
-              -{stats.deletions} 削除
-            </span>
-          </div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            📚 テキストストック ({savedTexts.length}件)
+          </h3>
 
           {/* 設定アイコン */}
           <div className="relative" ref={settingsRef}>
@@ -528,13 +522,6 @@ export function TextDiff() {
             )}
           </div>
         </div>
-      </div>
-
-      {/* テキストストック領域 */}
-      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-          📚 テキストストック ({savedTexts.length}件)
-        </h3>
         <div className="max-h-48 overflow-y-auto space-y-2">
           {savedTexts.map(text => {
             const isLeft = text.id === leftTextId;
@@ -682,7 +669,18 @@ export function TextDiff() {
       {(text1 || text2) && (
         <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
           <div className="bg-gray-100 dark:bg-gray-800 px-3 sm:px-4 py-2 border-b border-gray-300 dark:border-gray-600">
-            <h2 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200">差分結果</h2>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200">差分結果</h2>
+              {/* 統計情報 */}
+              <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm">
+                <span className="text-green-600 dark:text-green-400 font-medium">
+                  +{stats.additions} 追加
+                </span>
+                <span className="text-red-600 dark:text-red-400 font-medium">
+                  -{stats.deletions} 削除
+                </span>
+              </div>
+            </div>
           </div>
 
           {viewMode === 'split' ? (

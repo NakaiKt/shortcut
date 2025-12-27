@@ -44,7 +44,8 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">DevTools</h1>
         </div>
         <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-          データはすべてローカルで処理されます。外部に送信されることはありません
+          データはすべてローカルで処理されます<br />
+          外部に送信されることはありません
         </p>
       </div>
 

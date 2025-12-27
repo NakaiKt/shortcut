@@ -217,7 +217,7 @@ export function ImageConverter() {
           画像変換
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          画像を様々な形式に変換します。完全にブラウザ内で処理され、データは外部に送信されません。
+          画像を様々な形式に変換します。
         </p>
       </div>
 

@@ -34,46 +34,22 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
         w-72 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        flex flex-col
       `}
     >
-      {/* ダークモードトグル */}
+      {/* ヘッダー部分 */}
       <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              {isDark ? (
-                <Moon className="text-indigo-600 dark:text-indigo-400" size={22} />
-              ) : (
-                <Sun className="text-amber-500" size={22} />
-              )}
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                {isDark ? 'ダークモード' : 'ライトモード'}
-              </span>
-            </div>
-            {/* トグルスイッチ */}
-            <button
-              onClick={toggleDarkMode}
-              className={`
-                relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
-                ${isDark ? 'bg-indigo-600' : 'bg-gray-300'}
-              `}
-              aria-label="ダークモード切り替え"
-            >
-              <span
-                className={`
-                  inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300
-                  ${isDark ? 'translate-x-6' : 'translate-x-1'}
-                `}
-              />
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            表示モードを切り替え
-          </p>
+        <div className="flex items-center gap-3 mb-3">
+          <img src="/favicon.svg" alt="DevTools" className="w-8 h-8" />
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">DevTools</h1>
         </div>
+        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+          データはすべてローカルで処理されます。外部に送信されることはありません
+        </p>
       </div>
 
-      <nav className="space-y-2">
+      {/* ナビゲーションメニュー */}
+      <nav className="flex-1 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -98,6 +74,22 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
           );
         })}
       </nav>
+
+      {/* ダークモード切替（下部） */}
+      <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+        <button
+          onClick={toggleDarkMode}
+          className="w-full flex items-center justify-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+          aria-label="ダークモード切り替え"
+          title={isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
+        >
+          {isDark ? (
+            <Sun className="text-amber-500" size={24} />
+          ) : (
+            <Moon className="text-indigo-600" size={24} />
+          )}
+        </button>
+      </div>
     </aside>
   );
 }

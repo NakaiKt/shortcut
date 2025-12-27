@@ -31,7 +31,7 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
     <aside
       className={`
         fixed lg:static inset-y-0 left-0 z-50
-        w-72 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4
+        w-72 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-screen p-4
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         flex flex-col
@@ -50,7 +50,7 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
       </div>
 
       {/* ナビゲーションメニュー */}
-      <nav className="flex-1 space-y-2">
+      <nav className="flex-1 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;

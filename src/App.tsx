@@ -6,8 +6,9 @@ import { CommandsList } from './components/CommandsList';
 import { TextEditor } from './components/TextEditor';
 import { TextDiff } from './components/TextDiff';
 import { DummyFileCreator } from './components/DummyFileCreator';
+import { ImageConverter } from './components/ImageConverter';
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('shortcuts');
@@ -39,6 +40,7 @@ function App() {
           {currentPage === 'text-editor' && <TextEditor />}
           {currentPage === 'text-diff' && <TextDiff />}
           {currentPage === 'dummy-file-creator' && <DummyFileCreator />}
+          {currentPage === 'image-converter' && <ImageConverter />}
         </div>
       </main>
 

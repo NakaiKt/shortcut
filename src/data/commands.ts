@@ -352,6 +352,34 @@ export const commands: Command[] = [
     ],
   },
   {
+    id: 'git-reset-soft',
+    category: 'git',
+    name: 'コミットを取り消す（変更は保持）',
+    description: '直前のコミットを取り消し、変更内容はステージング状態で保持します',
+    windowsCommand: 'git reset --soft HEAD~1',
+    macCommand: 'git reset --soft HEAD~1',
+    options: [
+      {
+        id: 'multiple-commits',
+        windows: 'HEAD~{数値}',
+        mac: 'HEAD~{数値}',
+        description: '複数コミットを取り消す（例：HEAD~2で直前の2つ）',
+      },
+      {
+        id: 'mixed',
+        windows: '--mixed HEAD~1',
+        mac: '--mixed HEAD~1',
+        description: 'コミットを取り消し、ステージングも解除（変更は保持）',
+      },
+      {
+        id: 'hard',
+        windows: '--hard HEAD~1',
+        mac: '--hard HEAD~1',
+        description: 'コミットと変更を完全に削除（注意！）',
+      },
+    ],
+  },
+  {
     id: 'console-history',
     category: 'console',
     name: 'コマンド履歴表示',

@@ -23,10 +23,19 @@ export function ImageConverter() {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    // FileListはliveオブジェクトなのでinputリセット前にコピーする
+    const fileArray = Array.from(files);
+    const totalFiles = fileArray.length;
+
+    // inputをリセットして同じファイルを再選択できるようにする
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
     const newImages: SourceImage[] = [];
     let loaded = 0;
 
-    Array.from(files).forEach((file) => {
+    fileArray.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         newImages.push({
@@ -34,17 +43,12 @@ export function ImageConverter() {
           fileName: file.name,
         });
         loaded++;
-        if (loaded === files.length) {
+        if (loaded === totalFiles) {
           setSourceImages((prev) => [...prev, ...newImages]);
         }
       };
       reader.readAsDataURL(file);
     });
-
-    // inputをリセットして同じファイルを再選択できるようにする
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const removeImage = (index: number) => {

@@ -1,58 +1,58 @@
 import { useState, useRef } from 'react';
-import { Upload, Download, Image as ImageIcon, FileImage } from 'lucide-react';
+import { Upload, Download, Image as ImageIcon, FileImage, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 // @ts-ignore - imagetracerjsには型定義がないため
 import ImageTracer from 'imagetracerjs';
+import JSZip from 'jszip';
 
 type OutputFormat = 'jpeg' | 'png' | 'webp' | 'bmp' | 'svg';
 
+interface SourceImage {
+  dataUrl: string;
+  fileName: string;
+}
+
 export function ImageConverter() {
-  const [sourceImage, setSourceImage] = useState<string | null>(null);
-  const [sourceFileName, setSourceFileName] = useState<string>('');
+  const [sourceImages, setSourceImages] = useState<SourceImage[]>([]);
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('png');
   const [isConverting, setIsConverting] = useState(false);
-  const [convertedImage, setConvertedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    setSourceFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setSourceImage(e.target?.result as string);
-      setConvertedImage(null); // リセット
-    };
-    reader.readAsDataURL(file);
+    // FileListはliveオブジェクトなのでinputリセット前にコピーする
+    const fileArray = Array.from(files);
+    const totalFiles = fileArray.length;
+
+    // inputをリセットして同じファイルを再選択できるようにする
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    const newImages: SourceImage[] = [];
+    let loaded = 0;
+
+    fileArray.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        newImages.push({
+          dataUrl: e.target?.result as string,
+          fileName: file.name,
+        });
+        loaded++;
+        if (loaded === totalFiles) {
+          setSourceImages((prev) => [...prev, ...newImages]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  const handleConvert = async () => {
-    if (!sourceImage) return;
-
-    setIsConverting(true);
-    try {
-      let result: string;
-
-      if (outputFormat === 'svg') {
-        // 画像 → SVG 変換（imagetracerjsを使用）
-        result = await convertToSVG(sourceImage);
-      } else if (sourceImage.startsWith('data:image/svg+xml')) {
-        // SVG → ラスター画像変換
-        result = await convertSVGToRaster(sourceImage, outputFormat);
-      } else {
-        // ラスター画像間の変換
-        result = await convertRasterImage(sourceImage, outputFormat);
-      }
-
-      setConvertedImage(result);
-    } catch (error) {
-      console.error('Conversion error:', error);
-      alert('変換中にエラーが発生しました。');
-    } finally {
-      setIsConverting(false);
-    }
+  const removeImage = (index: number) => {
+    setSourceImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   // ラスター画像間の変換
@@ -97,7 +97,6 @@ export function ImageConverter() {
       const img = new Image();
       img.onload = () => {
         try {
-          // ImageTracerのオプション
           const options = {
             ltres: 1,
             qtres: 1,
@@ -113,13 +112,11 @@ export function ImageConverter() {
             viewbox: false,
           };
 
-          // ImageTracerで画像をSVGに変換
           const svgString = ImageTracer.imagedataToSVG(
             getImageData(img),
             options
           );
 
-          // SVGをData URLに変換
           const svgDataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
           resolve(svgDataUrl);
         } catch (error) {
@@ -156,7 +153,6 @@ export function ImageConverter() {
           return;
         }
 
-        // 背景を白で塗りつぶし（JPEGの場合）
         if (format === 'jpeg') {
           ctx.fillStyle = 'white';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -177,28 +173,80 @@ export function ImageConverter() {
     });
   };
 
-  const handleDownload = () => {
-    if (!convertedImage) return;
+  // 1枚の画像を変換
+  const convertSingleImage = async (source: SourceImage): Promise<{ dataUrl: string; fileName: string }> => {
+    let result: string;
 
-    const link = document.createElement('a');
-
-    // SVGの場合はbase64デコードして直接ダウンロード
-    if (outputFormat === 'svg' && convertedImage.startsWith('data:image/svg+xml;base64,')) {
-      const base64Data = convertedImage.split(',')[1];
-      const svgContent = decodeURIComponent(escape(atob(base64Data)));
-      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-      link.href = URL.createObjectURL(blob);
+    if (outputFormat === 'svg') {
+      result = await convertToSVG(source.dataUrl);
+    } else if (source.dataUrl.startsWith('data:image/svg+xml')) {
+      result = await convertSVGToRaster(source.dataUrl, outputFormat);
     } else {
-      link.href = convertedImage;
+      result = await convertRasterImage(source.dataUrl, outputFormat);
     }
 
-    const baseFileName = sourceFileName.replace(/\.[^/.]+$/, '');
-    link.download = `${baseFileName}.${outputFormat}`;
-    link.click();
+    const baseFileName = source.fileName.replace(/\.[^/.]+$/, '');
+    return { dataUrl: result, fileName: `${baseFileName}.${outputFormat}` };
+  };
 
-    // オブジェクトURLをクリーンアップ
-    if (link.href.startsWith('blob:')) {
-      setTimeout(() => URL.revokeObjectURL(link.href), 100);
+  // DataURLをBlobに変換
+  const dataUrlToBlob = (dataUrl: string): Blob => {
+    if (outputFormat === 'svg' && dataUrl.startsWith('data:image/svg+xml;base64,')) {
+      const base64Data = dataUrl.split(',')[1];
+      const svgContent = decodeURIComponent(escape(atob(base64Data)));
+      return new Blob([svgContent], { type: 'image/svg+xml' });
+    }
+
+    const byteString = atob(dataUrl.split(',')[1]);
+    const mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+  };
+
+  // 変換してダウンロード
+  const handleConvertAndDownload = async () => {
+    if (sourceImages.length === 0) return;
+
+    setIsConverting(true);
+    try {
+      // 全画像を変換
+      const convertedImages = await Promise.all(
+        sourceImages.map((source) => convertSingleImage(source))
+      );
+
+      if (convertedImages.length === 1) {
+        // 1枚の場合：直接ダウンロード
+        const { dataUrl, fileName } = convertedImages[0];
+        const blob = dataUrlToBlob(dataUrl);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 100);
+      } else {
+        // 複数枚の場合：zipでダウンロード
+        const zip = new JSZip();
+        convertedImages.forEach(({ dataUrl, fileName }) => {
+          const blob = dataUrlToBlob(dataUrl);
+          zip.file(fileName, blob);
+        });
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipBlob);
+        link.download = `converted_images.zip`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 100);
+      }
+    } catch (error) {
+      console.error('Conversion error:', error);
+      alert('変換中にエラーが発生しました。');
+    } finally {
+      setIsConverting(false);
     }
   };
 
@@ -217,7 +265,7 @@ export function ImageConverter() {
           画像変換
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          画像を様々な形式に変換します。
+          画像を様々な形式に変換します。複数画像の一括変換にも対応しています。
         </p>
       </div>
 
@@ -232,6 +280,7 @@ export function ImageConverter() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            multiple
             onChange={handleFileUpload}
             className="hidden"
           />
@@ -240,35 +289,52 @@ export function ImageConverter() {
             className="w-full sm:w-auto"
           >
             <ImageIcon className="mr-2" size={18} />
-            画像を選択
+            画像を選択（複数可）
           </Button>
-          {sourceFileName && (
+          {sourceImages.length > 0 && (
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              選択中: {sourceFileName}
+              {sourceImages.length}枚の画像を選択中
             </p>
           )}
         </div>
       </Card>
 
-      {/* プレビュー */}
-      {sourceImage && (
+      {/* プレビュー一覧 */}
+      {sourceImages.length > 0 && (
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <FileImage size={20} />
             プレビュー
           </h2>
-          <div className="flex justify-center bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-            <img
-              src={sourceImage}
-              alt="Preview"
-              className="max-w-full max-h-96 object-contain"
-            />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {sourceImages.map((image, index) => (
+              <div
+                key={index}
+                className="relative group bg-gray-100 dark:bg-gray-800 rounded-lg p-2"
+              >
+                <button
+                  onClick={() => removeImage(index)}
+                  className="absolute top-1 right-1 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="削除"
+                >
+                  <X size={14} />
+                </button>
+                <img
+                  src={image.dataUrl}
+                  alt={image.fileName}
+                  className="w-full h-24 object-contain rounded"
+                />
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate text-center" title={image.fileName}>
+                  {image.fileName}
+                </p>
+              </div>
+            ))}
           </div>
         </Card>
       )}
 
       {/* 出力形式選択 */}
-      {sourceImage && (
+      {sourceImages.length > 0 && (
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">出力形式を選択</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -297,55 +363,22 @@ export function ImageConverter() {
         </Card>
       )}
 
-      {/* 変換ボタン */}
-      {sourceImage && (
-        <div className="flex gap-4">
+      {/* 変換してダウンロードボタン */}
+      {sourceImages.length > 0 && (
+        <div>
           <Button
-            onClick={handleConvert}
+            onClick={handleConvertAndDownload}
             disabled={isConverting}
-            className="flex-1 sm:flex-none"
+            className="w-full sm:w-auto"
           >
-            {isConverting ? '変換中...' : '変換'}
+            <Download className="mr-2" size={18} />
+            {isConverting
+              ? '変換中...'
+              : sourceImages.length === 1
+                ? '変換してダウンロード'
+                : `変換してダウンロード（${sourceImages.length}枚・ZIP）`}
           </Button>
-          {convertedImage && (
-            <Button
-              onClick={handleDownload}
-              variant="outline"
-              className="flex-1 sm:flex-none"
-            >
-              <Download className="mr-2" size={18} />
-              ダウンロード
-            </Button>
-          )}
         </div>
-      )}
-
-      {/* 変換後のプレビュー */}
-      {convertedImage && (
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <FileImage size={20} />
-            変換結果
-          </h2>
-          <div className="flex justify-center bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-            {outputFormat === 'svg' ? (
-              <img
-                src={convertedImage}
-                alt="Converted SVG"
-                className="max-w-full max-h-96 object-contain"
-              />
-            ) : (
-              <img
-                src={convertedImage}
-                alt="Converted"
-                className="max-w-full max-h-96 object-contain"
-              />
-            )}
-          </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-4 text-center">
-            変換形式: {outputFormat.toUpperCase()}
-          </p>
-        </Card>
       )}
     </div>
   );

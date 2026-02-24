@@ -6,7 +6,7 @@ import { Card } from './ui/card';
 import ImageTracer from 'imagetracerjs';
 import JSZip from 'jszip';
 
-type OutputFormat = 'jpeg' | 'png' | 'webp' | 'bmp' | 'svg';
+type OutputFormat = 'jpeg' | 'png' | 'webp' | 'svg';
 
 interface SourceImage {
   dataUrl: string;
@@ -80,10 +80,9 @@ export function ImageConverter() {
 
         const mimeType = format === 'jpeg' ? 'image/jpeg'
           : format === 'png' ? 'image/png'
-          : format === 'webp' ? 'image/webp'
-          : 'image/bmp';
+          : 'image/webp';
 
-        const quality = format === 'jpeg' ? 0.9 : undefined;
+        const quality = format === 'jpeg' || format === 'webp' ? 0.9 : undefined;
         resolve(canvas.toDataURL(mimeType, quality));
       };
       img.onerror = () => reject(new Error('Failed to load image'));
@@ -162,10 +161,9 @@ export function ImageConverter() {
 
         const mimeType = format === 'jpeg' ? 'image/jpeg'
           : format === 'png' ? 'image/png'
-          : format === 'webp' ? 'image/webp'
-          : 'image/bmp';
+          : 'image/webp';
 
-        const quality = format === 'jpeg' ? 0.9 : undefined;
+        const quality = format === 'jpeg' || format === 'webp' ? 0.9 : undefined;
         resolve(canvas.toDataURL(mimeType, quality));
       };
       img.onerror = () => reject(new Error('Failed to load SVG'));
@@ -177,7 +175,10 @@ export function ImageConverter() {
   const convertSingleImage = async (source: SourceImage): Promise<{ dataUrl: string; fileName: string }> => {
     let result: string;
 
-    if (outputFormat === 'svg') {
+    if (outputFormat === 'svg' && source.dataUrl.startsWith('data:image/svg+xml')) {
+      // SVG → SVG はそのままパススルー（不要なラスタライズを避ける）
+      result = source.dataUrl;
+    } else if (outputFormat === 'svg') {
       result = await convertToSVG(source.dataUrl);
     } else if (source.dataUrl.startsWith('data:image/svg+xml')) {
       result = await convertSVGToRaster(source.dataUrl, outputFormat);
@@ -254,7 +255,6 @@ export function ImageConverter() {
     { value: 'jpeg', label: 'JPEG', description: '高圧縮・写真向き' },
     { value: 'png', label: 'PNG', description: 'ロスレス・透過対応' },
     { value: 'webp', label: 'WebP', description: '高効率・モダン' },
-    { value: 'bmp', label: 'BMP', description: '無圧縮' },
     { value: 'svg', label: 'SVG', description: 'ベクター化（トレース）' },
   ];
 

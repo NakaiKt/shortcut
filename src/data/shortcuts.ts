@@ -69,4 +69,12 @@ export const shortcuts: Shortcut[] = [
     windowsKey: 'Ctrl + H',
     macKey: 'Cmd + Option + F',
   },
+  {
+    id: '9',
+    tool: 'console',
+    name: 'タブのインスペクタを開く',
+    description: 'タブに名前をつけるための設定（インスペクタ）を開く。ブラウザでは開発者ツールを開くショートカットとしても知られる',
+    windowsKey: 'Ctrl + Shift + I',
+    macKey: 'Cmd + Shift + I',
+  },
 ];

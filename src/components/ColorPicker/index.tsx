@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useColorPicker } from '@/hooks/useColorPicker';
+import { useSavedColors } from '@/hooks/useSavedColors';
 import { ColorMap } from './ColorMap';
 import { HueSlider } from './HueSlider';
 import { ColorInputs } from './ColorInputs';
@@ -7,6 +9,8 @@ import { ColorPreview } from './ColorPreview';
 import { ColorHarmonies } from './ColorHarmonies';
 import { BrightnessGradient } from './BrightnessGradient';
 import { ShadcnThemeOutput } from './ShadcnThemeOutput';
+import { SavedColors } from './SavedColors';
+import { ColorCompareDialog } from './ColorCompareDialog';
 
 export function ColorPicker() {
   const {
@@ -17,6 +21,13 @@ export function ColorPicker() {
     setColorFromHex,
     setColor,
   } = useColorPicker(220, 0.8, 0.9);
+
+  const { savedColors, saveColor, removeColor, renameColor } = useSavedColors();
+  const [showCompare, setShowCompare] = useState(false);
+
+  const handleSelectHex = (hex: string) => {
+    setColorFromHex(hex);
+  };
 
   return (
     <div className="space-y-6">
@@ -59,7 +70,7 @@ export function ColorPicker() {
           </Card>
         </div>
 
-        {/* Right column: Preview & Info */}
+        {/* Right column: Preview & Saved */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -73,6 +84,20 @@ export function ColorPicker() {
           <Card>
             <CardContent className="pt-6">
               <BrightnessGradient color={color} onSelect={setColor} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <SavedColors
+                color={color}
+                savedColors={savedColors}
+                onSave={saveColor}
+                onRemove={removeColor}
+                onRename={renameColor}
+                onSelect={handleSelectHex}
+                onOpenCompare={() => setShowCompare(true)}
+              />
             </CardContent>
           </Card>
         </div>
@@ -94,6 +119,15 @@ export function ColorPicker() {
           <ShadcnThemeOutput color={color} />
         </CardContent>
       </Card>
+
+      {/* Compare dialog */}
+      {showCompare && (
+        <ColorCompareDialog
+          savedColors={savedColors}
+          onClose={() => setShowCompare(false)}
+          onSelect={handleSelectHex}
+        />
+      )}
     </div>
   );
 }

@@ -259,6 +259,76 @@ export function generateBrightnessGradient(h: number, s: number, steps: number =
 }
 
 // ============================================================
+// Color Compatibility / Contrast
+// ============================================================
+
+function relativeLuminance(r: number, g: number, b: number): number {
+  const [rs, gs, bs] = [r, g, b].map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+export function contrastRatio(a: Color, b: Color): number {
+  const lA = relativeLuminance(a.rgb.r, a.rgb.g, a.rgb.b);
+  const lB = relativeLuminance(b.rgb.r, b.rgb.g, b.rgb.b);
+  const lighter = Math.max(lA, lB);
+  const darker = Math.min(lA, lB);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+export function hueDifference(a: Color, b: Color): number {
+  const diff = Math.abs(a.hsl.h - b.hsl.h);
+  return diff > 180 ? 360 - diff : diff;
+}
+
+export interface ColorPairAnalysis {
+  contrastRatio: number;
+  wcagAA: boolean;
+  wcagAAA: boolean;
+  wcagAALarge: boolean;
+  hueDiff: number;
+  relationship: string;
+  relationshipDescription: string;
+}
+
+export function analyzeColorPair(a: Color, b: Color): ColorPairAnalysis {
+  const cr = contrastRatio(a, b);
+  const hd = hueDifference(a, b);
+
+  let relationship: string;
+  let relationshipDescription: string;
+
+  if (hd <= 15) {
+    relationship = '同系色';
+    relationshipDescription = 'ほぼ同じ色相。統一感のある配色に';
+  } else if (hd <= 45) {
+    relationship = '類似色';
+    relationshipDescription = '隣り合う色相。調和しやすく安定した印象';
+  } else if (hd <= 90) {
+    relationship = '中差色';
+    relationshipDescription = '適度な差がありバランスの良い組み合わせ';
+  } else if (hd <= 150) {
+    relationship = '対照色';
+    relationshipDescription = '大きな色相差。メリハリのあるデザインに';
+  } else {
+    relationship = '補色';
+    relationshipDescription = '正反対の色相。最大のコントラスト効果';
+  }
+
+  return {
+    contrastRatio: cr,
+    wcagAA: cr >= 4.5,
+    wcagAAA: cr >= 7,
+    wcagAALarge: cr >= 3,
+    hueDiff: hd,
+    relationship,
+    relationshipDescription,
+  };
+}
+
+// ============================================================
 // shadcn Theme Generation
 // ============================================================
 

@@ -199,18 +199,27 @@ function rotateHue(h: number, degrees: number): number {
   return (h + degrees + 360) % 360;
 }
 
-export function getHarmonies(color: Color): { name: string; nameJa: string; colors: Color[] }[] {
+export interface HarmonySet {
+  name: string;
+  nameJa: string;
+  description: string;
+  colors: Color[];
+}
+
+export function getHarmonies(color: Color): HarmonySet[] {
   const { h, s, v } = color.hsv;
 
   return [
     {
       name: 'Complementary',
       nameJa: '補色',
+      description: '色相環で正反対の色。コントラストが最大で、CTAボタンやアクセントに最適',
       colors: [colorFromHsv(rotateHue(h, 180), s, v)],
     },
     {
       name: 'Triadic',
       nameJa: 'トライアド',
+      description: '色相環で等間隔の3色。バランスが良く、カラフルで活気のあるデザインに',
       colors: [
         colorFromHsv(rotateHue(h, 120), s, v),
         colorFromHsv(rotateHue(h, 240), s, v),
@@ -219,6 +228,7 @@ export function getHarmonies(color: Color): { name: string; nameJa: string; colo
     {
       name: 'Analogous',
       nameJa: '類似色',
+      description: '隣り合う色同士。統一感があり、背景やカード間の配色に使いやすい',
       colors: [
         colorFromHsv(rotateHue(h, -30), s, v),
         colorFromHsv(rotateHue(h, 30), s, v),
@@ -227,6 +237,7 @@ export function getHarmonies(color: Color): { name: string; nameJa: string; colo
     {
       name: 'Split Complementary',
       nameJa: '分裂補色',
+      description: '補色の両隣。補色ほど強くなく、程よいコントラストでUI全体の配色に',
       colors: [
         colorFromHsv(rotateHue(h, 150), s, v),
         colorFromHsv(rotateHue(h, 210), s, v),

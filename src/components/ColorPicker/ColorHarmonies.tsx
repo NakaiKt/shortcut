@@ -16,10 +16,15 @@ export function ColorHarmonies({ color, onSelect }: ColorHarmoniesProps) {
       </h3>
       {harmonies.map((harmony) => (
         <div key={harmony.name}>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-            {harmony.nameJa}
-            <span className="ml-1 text-gray-400 dark:text-gray-500">({harmony.name})</span>
-          </p>
+          <div className="mb-2">
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
+              {harmony.nameJa}
+              <span className="ml-1 text-gray-400 dark:text-gray-500">({harmony.name})</span>
+            </p>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+              {harmony.description}
+            </p>
+          </div>
           <div className="flex gap-2">
             {/* Current color for reference */}
             <div className="flex flex-col items-center gap-1">

@@ -4,6 +4,12 @@ import { useClipboard } from '@/hooks/useClipboard';
 import { Copy, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
+function hslVarToStyle(value: string): string | undefined {
+  const match = value.match(/^([\d.]+)\s+([\d.]+)%\s+([\d.]+)%$/);
+  if (!match) return undefined;
+  return `hsl(${match[1]}, ${match[2]}%, ${match[3]}%)`;
+}
+
 interface ShadcnThemeOutputProps {
   color: Color;
 }
@@ -94,27 +100,65 @@ export function ShadcnThemeOutput({ color }: ShadcnThemeOutputProps) {
           )}
         </div>
 
-        {/* CSS output */}
-        <div className="relative">
-          <button
-            onClick={() => copyCss(css)}
-            className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors z-10"
-          >
-            {cssCopied ? (
-              <>
-                <Check size={12} className="text-green-500" />
-                <span className="text-green-600 dark:text-green-400">コピー済み</span>
-              </>
-            ) : (
-              <>
-                <Copy size={12} />
-                <span>CSSをコピー</span>
-              </>
-            )}
-          </button>
-          <pre className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-xs font-mono text-gray-700 dark:text-gray-300 overflow-x-auto max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-700">
-            {css}
-          </pre>
+        {/* CSS output with color previews */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500 dark:text-gray-400">プレビュー付きCSS出力</span>
+            <button
+              onClick={() => copyCss(css)}
+              className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              {cssCopied ? (
+                <>
+                  <Check size={12} className="text-green-500" />
+                  <span className="text-green-600 dark:text-green-400">コピー済み</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={12} />
+                  <span>CSSをコピー</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {[
+            { label: ':root (ライトモード)', vars: theme.light },
+            { label: '.dark (ダークモード)', vars: theme.dark },
+          ].map(({ label, vars }) => (
+            <div key={label}>
+              <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                {label}
+              </h4>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <table className="w-full text-xs font-mono">
+                  <tbody>
+                    {Object.entries(vars).map(([key, value]) => {
+                      const bgStyle = hslVarToStyle(value);
+                      return (
+                        <tr key={key} className="border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+                          <td className="px-3 py-1.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            {key}
+                          </td>
+                          <td className="px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                            {value}
+                          </td>
+                          <td className="px-3 py-1.5 w-10">
+                            {bgStyle && (
+                              <div
+                                className="w-6 h-6 rounded border border-gray-200 dark:border-gray-600"
+                                style={{ backgroundColor: bgStyle }}
+                              />
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

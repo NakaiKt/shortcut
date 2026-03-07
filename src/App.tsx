@@ -7,8 +7,9 @@ import { TextEditor } from './components/TextEditor';
 import { TextDiff } from './components/TextDiff';
 import { DummyFileCreator } from './components/DummyFileCreator';
 import { ImageConverter } from './components/ImageConverter';
+import { ColorPicker } from './components/ColorPicker';
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'color-picker';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('shortcuts');
@@ -41,6 +42,7 @@ function App() {
           {currentPage === 'text-diff' && <TextDiff />}
           {currentPage === 'dummy-file-creator' && <DummyFileCreator />}
           {currentPage === 'image-converter' && <ImageConverter />}
+          {currentPage === 'color-picker' && <ColorPicker />}
         </div>
       </main>
 

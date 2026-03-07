@@ -1,7 +1,7 @@
-import { List, FileText, GitCompare, Moon, Sun, Terminal, FileDown, Image } from 'lucide-react';
+import { List, FileText, GitCompare, Moon, Sun, Terminal, FileDown, Image, Palette } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'color-picker';
 
 interface SidebarProps {
   currentPage: Page;
@@ -20,6 +20,7 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
     { id: 'text-diff' as Page, label: 'テキスト差分表示', icon: GitCompare },
     { id: 'dummy-file-creator' as Page, label: 'ダミーファイル作成', icon: FileDown },
     { id: 'image-converter' as Page, label: '画像変換', icon: Image },
+    { id: 'color-picker' as Page, label: 'カラーピッカー', icon: Palette },
   ];
 
   const handlePageChange = (page: Page) => {

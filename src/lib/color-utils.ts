@@ -398,6 +398,274 @@ export function generateShadcnTheme(primary: Color, secondary?: Color): ShadcnTh
   return { light, dark };
 }
 
+// ============================================================
+// Dark Mode Color Suggestion
+// ============================================================
+
+export interface DarkModeSuggestion {
+  color: Color;
+  strategy: string;
+  strategyJa: string;
+  description: string;
+  confidence: number; // 0-1 how reliable the suggestion is
+}
+
+/**
+ * Calculate relative luminance of a color (0-1)
+ */
+function luminanceOf(color: Color): number {
+  return relativeLuminance(color.rgb.r, color.rgb.g, color.rgb.b);
+}
+
+/**
+ * Clamp a number between min and max
+ */
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Strategy 1: Perceptual Lightness Flip
+ *
+ * HSLの明度を知覚的に反転させる。単純な 1-L ではなく、
+ * ダークモードの背景(~0.10)と前景(~0.95)の範囲にリマップする。
+ * 彩度はダークモードでは若干下げ、目に優しい色にする。
+ */
+function perceptualFlip(color: Color): DarkModeSuggestion {
+  const { h, s, l } = color.hsl;
+
+  // Light mode range: 0.0 - 1.0 → Dark mode range mapped
+  // Very light colors → very dark, and vice versa
+  // But dark mode avoids pure black/white, so we map to 0.08-0.92
+  const darkL = clamp(1 - l, 0.08, 0.92);
+
+  // In dark mode, reduce saturation slightly to reduce eye strain
+  // More reduction for very saturated colors
+  const darkS = s * (0.85 + 0.15 * (1 - s));
+
+  const rgb = hslToRgb(h, darkS, darkL);
+  return {
+    color: colorFromRgb(rgb.r, rgb.g, rgb.b),
+    strategy: 'Perceptual Flip',
+    strategyJa: '知覚反転',
+    description: '明度を反転し、彩度を少し下げてダークモード向けに調整。最もベーシックなアプローチ',
+    confidence: 0.7,
+  };
+}
+
+/**
+ * Strategy 2: Contrast-Preserving
+ *
+ * ライトモードで白背景(#fff)に対して持っていたコントラスト比を、
+ * ダークモードの暗い背景(#121212)でも同等に保つような色を探す。
+ * UIの視認性をテーマ間で一貫させるのに有効。
+ */
+function contrastPreserving(color: Color): DarkModeSuggestion {
+  const { h, s } = color.hsl;
+
+  // Contrast of original against white (#ffffff)
+  const white = colorFromRgb(255, 255, 255);
+  const darkBg = colorFromHex('#121212')!;
+
+  const originalContrast = contrastRatio(color, white);
+
+  // Binary search for lightness that gives similar contrast against dark bg
+  let lo = 0.1;
+  let hi = 0.95;
+  let bestL = 0.5;
+  let bestDiff = Infinity;
+
+  for (let i = 0; i < 20; i++) {
+    const mid = (lo + hi) / 2;
+    const testRgb = hslToRgb(h, s * 0.9, mid);
+    const testColor = colorFromRgb(testRgb.r, testRgb.g, testRgb.b);
+    const testContrast = contrastRatio(testColor, darkBg);
+    const diff = Math.abs(testContrast - originalContrast);
+
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestL = mid;
+    }
+
+    if (testContrast < originalContrast) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+
+  const darkS = s * 0.9;
+  const rgb = hslToRgb(h, darkS, bestL);
+
+  return {
+    color: colorFromRgb(rgb.r, rgb.g, rgb.b),
+    strategy: 'Contrast Preserving',
+    strategyJa: 'コントラスト保持',
+    description: '白背景でのコントラスト比を暗い背景(#121212)でも再現。視認性の一貫性が最も高い',
+    confidence: 0.85,
+  };
+}
+
+/**
+ * Strategy 3: Material Design Approach
+ *
+ * Google Material Design のダークテーマガイドラインに基づく。
+ * 明るい色は彩度を下げて明度を上げ、暗い色は明度を上げる。
+ * 全体的にトーンを柔らかくし、有機的な見え方にする。
+ */
+function materialDesignApproach(color: Color): DarkModeSuggestion {
+  const { h, s, l } = color.hsl;
+
+  let darkL: number;
+  let darkS: number;
+
+  if (l > 0.7) {
+    // Very light colors (backgrounds, etc.) → dark equivalent
+    darkL = clamp(0.15 + (1 - l) * 0.3, 0.08, 0.25);
+    darkS = s * 0.6;
+  } else if (l > 0.4) {
+    // Medium colors (primary, accent) → slightly lighter, less saturated
+    // Material recommends 200 tone for dark mode (lighter variant)
+    darkL = clamp(l + 0.15, 0.45, 0.75);
+    darkS = s * 0.80;
+  } else {
+    // Dark colors → much lighter for dark mode
+    darkL = clamp(l + 0.35, 0.45, 0.80);
+    darkS = s * 0.75;
+  }
+
+  const rgb = hslToRgb(h, darkS, darkL);
+  return {
+    color: colorFromRgb(rgb.r, rgb.g, rgb.b),
+    strategy: 'Material Design',
+    strategyJa: 'マテリアル風',
+    description: 'Material Design準拠。明るい色は暗く控えめに、アクセント色は明度を上げて彩度を抑える',
+    confidence: 0.8,
+  };
+}
+
+/**
+ * Strategy 4: WCAG Accessible
+ *
+ * ダーク背景(#121212)に対してWCAG AA準拠(コントラスト比4.5:1以上)を
+ * 保証する色を提案。アクセシビリティが最重要な場合に。
+ */
+function wcagAccessible(color: Color): DarkModeSuggestion {
+  const { h, s } = color.hsl;
+
+  const darkBg = colorFromHex('#121212')!;
+
+  // Find the minimum lightness that satisfies WCAG AA (4.5:1) against dark bg
+  let lo = 0.1;
+  let hi = 0.95;
+  let targetL = 0.6;
+
+  for (let i = 0; i < 20; i++) {
+    const mid = (lo + hi) / 2;
+    const testRgb = hslToRgb(h, s * 0.85, mid);
+    const testColor = colorFromRgb(testRgb.r, testRgb.g, testRgb.b);
+    const cr = contrastRatio(testColor, darkBg);
+
+    if (cr < 4.5) {
+      lo = mid;
+    } else {
+      targetL = mid;
+      hi = mid;
+    }
+  }
+
+  // Use a lightness slightly above minimum to give breathing room
+  const finalL = clamp(targetL + 0.03, 0.1, 0.9);
+  const darkS = s * 0.85;
+  const rgb = hslToRgb(h, darkS, finalL);
+
+  const result = colorFromRgb(rgb.r, rgb.g, rgb.b);
+  const actualContrast = contrastRatio(result, darkBg);
+
+  return {
+    color: result,
+    strategy: 'WCAG Accessible',
+    strategyJa: 'WCAG準拠',
+    description: `暗い背景で4.5:1以上のコントラストを保証 (実測: ${actualContrast.toFixed(1)}:1)。テキスト色に最適`,
+    confidence: actualContrast >= 4.5 ? 0.9 : 0.6,
+  };
+}
+
+/**
+ * Strategy 5: Tone-matched (same "weight")
+ *
+ * ライトモードでの色の「視覚的重さ」をダークモードでも一致させる。
+ * 輝度(luminance)を基にダークモード背景内での相対位置を計算。
+ */
+function toneMatched(color: Color): DarkModeSuggestion {
+  const { h, s } = color.hsl;
+
+  // Calculate where this color sits between white and black in luminance space
+  const lum = luminanceOf(color);
+
+  // In light mode: color sits between white(1.0) and black(0.0)
+  // Position = how "heavy" the color is (0 = lightest, 1 = darkest)
+  const lightPosition = 1 - lum;
+
+  // In dark mode: we want same visual "weight" but inverted context
+  // Dark bg luminance ≈ 0.015, light text luminance ≈ 0.87
+  const darkBgLum = 0.015;
+  const darkFgLum = 0.87;
+
+  // Map position: lightest colors become darkest in dark mode, etc.
+  const targetLum = darkBgLum + (1 - lightPosition) * (darkFgLum - darkBgLum);
+
+  // Binary search for lightness that achieves target luminance
+  let lo = 0.0;
+  let hi = 1.0;
+  let bestL = 0.5;
+
+  for (let i = 0; i < 25; i++) {
+    const mid = (lo + hi) / 2;
+    const testRgb = hslToRgb(h, s * 0.88, mid);
+    const testColor = colorFromRgb(testRgb.r, testRgb.g, testRgb.b);
+    const testLum = luminanceOf(testColor);
+
+    bestL = mid;
+    if (testLum < targetLum) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+
+  const darkS = s * 0.88;
+  const rgb = hslToRgb(h, darkS, clamp(bestL, 0.08, 0.92));
+
+  return {
+    color: colorFromRgb(rgb.r, rgb.g, rgb.b),
+    strategy: 'Tone Matched',
+    strategyJa: 'トーン一致',
+    description: 'ライトモードでの視覚的な「重さ」をダークモードでも再現。UIの印象を統一したい場合に',
+    confidence: 0.75,
+  };
+}
+
+/**
+ * Suggest dark mode colors for a given light mode color.
+ * Returns multiple suggestions with different strategies.
+ *
+ * @param color - The light mode color to convert
+ * @param direction - 'light-to-dark' or 'dark-to-light'
+ */
+export function suggestDarkModeColors(
+  color: Color,
+  _direction: 'light-to-dark' | 'dark-to-light' = 'light-to-dark'
+): DarkModeSuggestion[] {
+  return [
+    contrastPreserving(color),
+    materialDesignApproach(color),
+    wcagAccessible(color),
+    toneMatched(color),
+    perceptualFlip(color),
+  ].sort((a, b) => b.confidence - a.confidence);
+}
+
 export function themeToCss(theme: ShadcnTheme): string {
   const renderBlock = (vars: Record<string, string>, indent: string) =>
     Object.entries(vars)

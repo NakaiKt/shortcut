@@ -104,17 +104,17 @@ export function ColorPicker() {
         </div>
       </div>
 
-      {/* Full width: Dark Mode Suggestions */}
-      <Card>
-        <CardContent className="pt-6">
-          <DarkModeSuggestions color={color} onSelect={setColor} />
-        </CardContent>
-      </Card>
-
       {/* Full width: Harmonies */}
       <Card>
         <CardContent className="pt-6">
           <ColorHarmonies color={color} onSelect={setColor} />
+        </CardContent>
+      </Card>
+
+      {/* Full width: Dark Mode Suggestions */}
+      <Card>
+        <CardContent className="pt-6">
+          <DarkModeSuggestions color={color} onSelect={setColor} />
         </CardContent>
       </Card>
 

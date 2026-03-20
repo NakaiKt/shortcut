@@ -13,6 +13,8 @@ interface DarkModeSuggestionProps {
   onSelect: (color: Color) => void;
 }
 
+type Direction = 'light-to-dark' | 'dark-to-light';
+
 function ContrastBadge({ ratio }: { ratio: number }) {
   const level = ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : ratio >= 3 ? 'AA18' : 'Fail';
   const bgColor =
@@ -48,17 +50,35 @@ function ConfidenceBar({ confidence }: { confidence: number }) {
 function SuggestionCard({
   suggestion,
   originalColor,
+  direction,
   onSelect,
 }: {
   suggestion: Suggestion;
   originalColor: Color;
+  direction: Direction;
   onSelect: (color: Color) => void;
 }) {
-  const darkBg = colorFromHex('#121212')!;
-  const whiteBg = colorFromHex('#ffffff')!;
-  const contrastVsDark = contrastRatio(suggestion.color, darkBg);
-  const contrastVsLight = contrastRatio(originalColor, whiteBg);
+  const isDark = direction === 'light-to-dark';
+
+  // Background colors for each mode
+  const fromBgHex = isDark ? '#ffffff' : '#121212';
+  const toBgHex = isDark ? '#121212' : '#ffffff';
+  const fromBg = colorFromHex(fromBgHex)!;
+  const toBg = colorFromHex(toBgHex)!;
+
+  // Text colors for each mode
+  // Dark mode: white text on dark bg. Light mode: dark text on light bg.
+  const fromTextHex = isDark ? '#1a1a1a' : '#f0f0f0';
+  const toTextHex = isDark ? '#f0f0f0' : '#1a1a1a';
+
+  const contrastOrigVsFromBg = contrastRatio(originalColor, fromBg);
+  const contrastSugVsToBg = contrastRatio(suggestion.color, toBg);
+
+  // For the color badge
   const textColor = suggestion.color.hsl.l > 0.55 ? 'text-gray-900' : 'text-white';
+
+  const fromLabel = isDark ? 'Light' : 'Dark';
+  const toLabel = isDark ? 'Dark' : 'Light';
 
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2">
@@ -81,20 +101,18 @@ function SuggestionCard({
 
       {/* Color comparison */}
       <div className="flex items-center gap-2">
-        {/* Light mode preview */}
+        {/* Original mode preview */}
         <div className="flex flex-col items-center gap-1">
-          <div className="relative w-full">
+          <div
+            className="w-16 h-12 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center"
+            style={{ backgroundColor: fromBgHex }}
+          >
             <div
-              className="w-16 h-12 rounded-md border border-gray-200 dark:border-gray-600 flex items-center justify-center"
-              style={{ backgroundColor: '#ffffff' }}
-            >
-              <div
-                className="w-10 h-6 rounded"
-                style={{ backgroundColor: originalColor.hex }}
-              />
-            </div>
+              className="w-10 h-6 rounded"
+              style={{ backgroundColor: originalColor.hex }}
+            />
           </div>
-          <span className="text-[10px] text-gray-400">Light</span>
+          <span className="text-[10px] text-gray-400">{fromLabel}</span>
         </div>
 
         {/* Arrow */}
@@ -102,16 +120,16 @@ function SuggestionCard({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
 
-        {/* Dark mode preview */}
+        {/* Target mode preview */}
         <div className="flex flex-col items-center gap-1">
           <button
-            className="relative w-full cursor-pointer hover:scale-105 transition-transform"
+            className="cursor-pointer hover:scale-105 transition-transform"
             onClick={() => onSelect(suggestion.color)}
             title="クリックでこの色を選択"
           >
             <div
-              className="w-16 h-12 rounded-md border border-gray-600 flex items-center justify-center"
-              style={{ backgroundColor: '#121212' }}
+              className="w-16 h-12 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center"
+              style={{ backgroundColor: toBgHex }}
             >
               <div
                 className="w-10 h-6 rounded"
@@ -119,7 +137,7 @@ function SuggestionCard({
               />
             </div>
           </button>
-          <span className="text-[10px] text-gray-400">Dark</span>
+          <span className="text-[10px] text-gray-400">{toLabel}</span>
         </div>
 
         {/* Color info */}
@@ -137,30 +155,44 @@ function SuggestionCard({
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1">
-              <span className="text-[10px] text-gray-400">vs #121212:</span>
-              <ContrastBadge ratio={contrastVsDark} />
+              <span className="text-[10px] text-gray-400">元 vs {fromBgHex}:</span>
+              <ContrastBadge ratio={contrastOrigVsFromBg} />
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-[10px] text-gray-400">元 vs #fff:</span>
-              <ContrastBadge ratio={contrastVsLight} />
+              <span className="text-[10px] text-gray-400">提案 vs {toBgHex}:</span>
+              <ContrastBadge ratio={contrastSugVsToBg} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Full width preview: text on backgrounds */}
+      {/* Full width preview: suggested color as background with theme-appropriate text */}
       <div className="grid grid-cols-2 gap-1.5">
-        <div
-          className="rounded px-2 py-1.5 text-center text-xs font-medium"
-          style={{ backgroundColor: '#ffffff', color: originalColor.hex }}
+        {/* Original: color as text on the mode's bg */}
+        <div className="rounded px-2 py-1.5 text-center text-xs font-medium border border-gray-200 dark:border-gray-600"
+          style={{ backgroundColor: fromBgHex, color: originalColor.hex }}
         >
-          Light Mode テキスト
+          {fromLabel} テキスト色
         </div>
-        <div
-          className="rounded px-2 py-1.5 text-center text-xs font-medium"
-          style={{ backgroundColor: '#121212', color: suggestion.color.hex }}
+        {/* Suggested: color as background with the mode's text color */}
+        <div className="rounded px-2 py-1.5 text-center text-xs font-medium"
+          style={{ backgroundColor: suggestion.color.hex, color: toTextHex }}
         >
-          Dark Mode テキスト
+          {toLabel} 背景色
+        </div>
+      </div>
+
+      {/* Additional preview: suggested color as text on the target mode's bg */}
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="rounded px-2 py-1.5 text-center text-xs font-medium border border-gray-200 dark:border-gray-600"
+          style={{ backgroundColor: originalColor.hex, color: fromTextHex }}
+        >
+          {fromLabel} 背景色
+        </div>
+        <div className="rounded px-2 py-1.5 text-center text-xs font-medium border border-gray-200 dark:border-gray-600"
+          style={{ backgroundColor: toBgHex, color: suggestion.color.hex }}
+        >
+          {toLabel} テキスト色
         </div>
       </div>
     </div>
@@ -168,20 +200,24 @@ function SuggestionCard({
 }
 
 export function DarkModeSuggestions({ color, onSelect }: DarkModeSuggestionProps) {
-  const [direction, setDirection] = useState<'light-to-dark' | 'dark-to-light'>('light-to-dark');
+  const [direction, setDirection] = useState<Direction>('light-to-dark');
   const suggestions = suggestDarkModeColors(color, direction);
 
-  const directionLabel = direction === 'light-to-dark' ? 'Light → Dark' : 'Dark → Light';
-  const directionLabelJa = direction === 'light-to-dark'
+  const isDark = direction === 'light-to-dark';
+  const directionLabel = isDark ? 'Light → Dark' : 'Dark → Light';
+  const titleJa = isDark ? 'ダークモード色提案' : 'ライトモード色提案';
+  const directionLabelJa = isDark
     ? 'ライトモードの色からダークモードを提案'
     : 'ダークモードの色からライトモードを提案';
+  const fromBgHex = isDark ? '#ffffff' : '#121212';
+  const fromLabel = isDark ? 'Light' : 'Dark';
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            ダークモード色提案
+            {titleJa}
           </h3>
           <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
             {directionLabelJa}
@@ -202,15 +238,23 @@ export function DarkModeSuggestions({ color, onSelect }: DarkModeSuggestionProps
       {/* Current color reference */}
       <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
         <div
-          className="w-8 h-8 rounded-md border border-gray-200 dark:border-gray-600"
-          style={{ backgroundColor: color.hex }}
-        />
+          className="w-8 h-8 rounded-md border border-gray-200 dark:border-gray-600 flex items-center justify-center"
+          style={{ backgroundColor: fromBgHex }}
+        >
+          <div
+            className="w-5 h-5 rounded"
+            style={{ backgroundColor: color.hex }}
+          />
+        </div>
         <div>
           <span className="text-xs font-mono font-semibold text-gray-700 dark:text-gray-200">
             {color.hex.toUpperCase()}
           </span>
           <span className="text-[10px] text-gray-400 ml-2">
             HSL({color.hsl.h.toFixed(0)}°, {(color.hsl.s * 100).toFixed(0)}%, {(color.hsl.l * 100).toFixed(0)}%)
+          </span>
+          <span className="text-[10px] text-gray-400 ml-2">
+            ({fromLabel}モードでの色)
           </span>
         </div>
       </div>
@@ -222,6 +266,7 @@ export function DarkModeSuggestions({ color, onSelect }: DarkModeSuggestionProps
             key={suggestion.strategy}
             suggestion={suggestion}
             originalColor={color}
+            direction={direction}
             onSelect={onSelect}
           />
         ))}

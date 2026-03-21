@@ -11,6 +11,7 @@ import { BrightnessGradient } from './BrightnessGradient';
 import { ShadcnThemeOutput } from './ShadcnThemeOutput';
 import { SavedColors } from './SavedColors';
 import { ColorCompareDialog } from './ColorCompareDialog';
+import { DarkModeSuggestions } from './DarkModeSuggestion';
 
 export function ColorPicker() {
   const {
@@ -107,6 +108,13 @@ export function ColorPicker() {
       <Card>
         <CardContent className="pt-6">
           <ColorHarmonies color={color} onSelect={setColor} />
+        </CardContent>
+      </Card>
+
+      {/* Full width: Dark Mode Suggestions */}
+      <Card>
+        <CardContent className="pt-6">
+          <DarkModeSuggestions color={color} onSelect={setColor} />
         </CardContent>
       </Card>
 

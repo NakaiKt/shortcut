@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -9,6 +9,24 @@ interface ImageUploaderProps {
 export function ImageUploader({ onFileSelect }: ImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            onFileSelect(file);
+          }
+          break;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [onFileSelect]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,7 +79,7 @@ export function ImageUploader({ onFileSelect }: ImageUploaderProps) {
       />
       <ImageIcon className="mx-auto mb-3 text-gray-400 dark:text-gray-500" size={48} />
       <p className="text-gray-600 dark:text-gray-400 mb-4">
-        画像をドラッグ&ドロップ、または選択してください
+        画像をドラッグ&ドロップ、クリップボードから貼り付け（Ctrl+V）、または選択してください
       </p>
       <Button onClick={() => fileInputRef.current?.click()}>
         <Upload className="mr-2" size={18} />

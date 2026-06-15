@@ -1,7 +1,7 @@
-import { List, FileText, GitCompare, Moon, Sun, Terminal, FileDown, Image, Palette, Pencil } from 'lucide-react';
+import { List, FileText, GitCompare, Moon, Sun, Terminal, FileDown, Image, Palette, Pencil, Braces } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder';
 
 interface SidebarProps {
   currentPage: Page;
@@ -22,6 +22,7 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
     { id: 'image-converter' as Page, label: '画像拡張子変換', icon: Image },
     { id: 'image-editor' as Page, label: '画像編集', icon: Pencil },
     { id: 'color-picker' as Page, label: 'カラーピッカー', icon: Palette },
+    { id: 'curl-builder' as Page, label: 'curlビルダー', icon: Braces },
   ];
 
   const handlePageChange = (page: Page) => {

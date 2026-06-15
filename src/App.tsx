@@ -9,8 +9,9 @@ import { DummyFileCreator } from './components/DummyFileCreator';
 import { ImageConverter } from './components/ImageConverter';
 import { ImageEditor } from './components/ImageEditor';
 import { ColorPicker } from './components/ColorPicker';
+import { CurlBuilder } from './components/CurlBuilder';
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('shortcuts');
@@ -45,6 +46,7 @@ function App() {
           {currentPage === 'image-converter' && <ImageConverter />}
           {currentPage === 'image-editor' && <ImageEditor />}
           {currentPage === 'color-picker' && <ColorPicker />}
+          {currentPage === 'curl-builder' && <CurlBuilder />}
         </div>
       </main>
 

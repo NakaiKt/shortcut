@@ -709,6 +709,100 @@ export function suggestDarkModeColors(
   ].sort((a, b) => b.confidence - a.confidence);
 }
 
+// ============================================================
+// Color Blindness Simulation
+// ============================================================
+
+export type ColorBlindType = 'protanopia' | 'deuteranopia' | 'tritanopia';
+export type Distinguishability = 'ok' | 'borderline' | 'poor';
+
+// Linearize sRGB channel (remove gamma)
+function linearize(c: number): number {
+  const v = c / 255;
+  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+}
+
+// Delinearize back to sRGB
+function delinearize(v: number): number {
+  const c = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+  return Math.round(Math.max(0, Math.min(1, c)) * 255);
+}
+
+// Simulation matrices in linearized sRGB space (Viénot 1999 / Brettel 1997 approximations)
+const CB_MATRICES: Record<ColorBlindType, number[][]> = {
+  protanopia: [
+    [0.0, 2.02344, -2.52581],
+    [0.0, 1.0,     0.0     ],
+    [0.0, 0.0,     1.0     ],
+  ],
+  deuteranopia: [
+    [1.0,      0.0, 0.0],
+    [0.49421, 0.0, 1.24827],
+    [0.0,     0.0, 1.0    ],
+  ],
+  tritanopia: [
+    [1.0,     0.0,      0.0    ],
+    [0.0,     1.0,      0.0    ],
+    [-0.395913, 0.801109, 0.0  ],
+  ],
+};
+
+// LMS conversion matrices (Hunt-Pointer-Estevez, D65)
+const RGB_TO_LMS = [
+  [0.31399022, 0.63951294, 0.04649755],
+  [0.15537241, 0.75789446, 0.08670142],
+  [0.01775239, 0.10944209, 0.87256922],
+];
+
+const LMS_TO_RGB = [
+  [ 5.47221206, -4.6419601,   0.16963708],
+  [-1.1252419,   2.29317094, -0.1678952 ],
+  [ 0.02980165, -0.19318073,  1.16364789],
+];
+
+function matMul3(m: number[][], v: [number, number, number]): [number, number, number] {
+  return [
+    m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2],
+    m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2],
+    m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2],
+  ];
+}
+
+export function simulateColorBlindness(rgb: RGB, type: ColorBlindType): RGB {
+  const lin: [number, number, number] = [linearize(rgb.r), linearize(rgb.g), linearize(rgb.b)];
+  const lms = matMul3(RGB_TO_LMS, lin);
+  const sim = matMul3(CB_MATRICES[type], lms);
+  const back = matMul3(LMS_TO_RGB, sim as [number, number, number]);
+  return { r: delinearize(back[0]), g: delinearize(back[1]), b: delinearize(back[2]) };
+}
+
+// Convert RGB to CIE Lab for perceptual color difference
+function rgbToLab(rgb: RGB): [number, number, number] {
+  const r = linearize(rgb.r), g = linearize(rgb.g), b = linearize(rgb.b);
+  // sRGB D65 → XYZ
+  const X = r * 0.4124564 + g * 0.3575761 + b * 0.1804375;
+  const Y = r * 0.2126729 + g * 0.7151522 + b * 0.0721750;
+  const Z = r * 0.0193339 + g * 0.1191920 + b * 0.9503041;
+  const f = (t: number) => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
+  const fx = f(X / 0.95047), fy = f(Y / 1.0), fz = f(Z / 1.08883);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+
+function deltaE(a: RGB, b: RGB): number {
+  const [L1, a1, b1] = rgbToLab(a);
+  const [L2, a2, b2] = rgbToLab(b);
+  return Math.sqrt((L2 - L1) ** 2 + (a2 - a1) ** 2 + (b2 - b1) ** 2);
+}
+
+export function getDistinguishability(a: RGB, b: RGB, type: ColorBlindType): Distinguishability {
+  const simA = simulateColorBlindness(a, type);
+  const simB = simulateColorBlindness(b, type);
+  const de = deltaE(simA, simB);
+  if (de >= 25) return 'ok';
+  if (de >= 12) return 'borderline';
+  return 'poor';
+}
+
 export function themeToCss(theme: ShadcnTheme): string {
   const renderBlock = (vars: Record<string, string>, indent: string) =>
     Object.entries(vars)

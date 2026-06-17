@@ -3,6 +3,7 @@ import { generateShadcnTheme, themeToCss, formatHslForCssVar, colorFromHex, type
 import { useClipboard } from '@/hooks/useClipboard';
 import { Copy, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import type { PaletteColor } from '@/hooks/usePalette';
 
 function hslVarToStyle(value: string): string | undefined {
   const match = value.match(/^([\d.]+)\s+([\d.]+)%\s+([\d.]+)%$/);
@@ -12,24 +13,44 @@ function hslVarToStyle(value: string): string | undefined {
 
 interface ShadcnThemeOutputProps {
   color: Color;
+  palette?: PaletteColor[];
 }
 
-export function ShadcnThemeOutput({ color }: ShadcnThemeOutputProps) {
-  const [useSecondary, setUseSecondary] = useState(false);
+export function ShadcnThemeOutput({ color, palette = [] }: ShadcnThemeOutputProps) {
+  const [primaryId, setPrimaryId] = useState<string | null>(null);
+  const [secondaryId, setSecondaryId] = useState<string | null>(null);
+  const [useManualSecondary, setUseManualSecondary] = useState(false);
   const [secondaryHex, setSecondaryHex] = useState('#6366f1');
   const { copied: cssCopied, copy: copyCss } = useClipboard();
   const { copied: varCopied, copy: copyVar } = useClipboard();
 
-  const secondaryColor = useMemo(() => colorFromHex(secondaryHex), [secondaryHex]);
+  const primaryColor = useMemo(() => {
+    if (primaryId) {
+      const entry = palette.find((p) => p.id === primaryId);
+      if (entry) return colorFromHex(entry.hex) ?? color;
+    }
+    return color;
+  }, [primaryId, palette, color]);
+
+  const secondaryColor = useMemo(() => {
+    if (secondaryId) {
+      const entry = palette.find((p) => p.id === secondaryId);
+      if (entry) return colorFromHex(entry.hex) ?? null;
+    }
+    if (useManualSecondary) return colorFromHex(secondaryHex);
+    return null;
+  }, [secondaryId, palette, useManualSecondary, secondaryHex]);
+
+  const useSecondary = secondaryId !== null || useManualSecondary;
 
   const theme = useMemo(
-    () => generateShadcnTheme(color, useSecondary && secondaryColor ? secondaryColor : undefined),
-    [color, useSecondary, secondaryColor]
+    () => generateShadcnTheme(primaryColor, useSecondary && secondaryColor ? secondaryColor : undefined),
+    [primaryColor, useSecondary, secondaryColor]
   );
 
   const css = useMemo(() => themeToCss(theme), [theme]);
 
-  const currentHslVar = formatHslForCssVar(color.hsl.h, color.hsl.s, color.hsl.l);
+  const currentHslVar = formatHslForCssVar(primaryColor.hsl.h, primaryColor.hsl.s, primaryColor.hsl.l);
 
   return (
     <div className="space-y-6">
@@ -61,43 +82,84 @@ export function ShadcnThemeOutput({ color }: ShadcnThemeOutputProps) {
           現在選択中の色をメインカラーとして、shadcnのCSS変数を一括生成します。
         </p>
 
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex items-center gap-2">
+        <div className="space-y-3 mb-4">
+          {/* Primary */}
+          <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-md border border-gray-200 dark:border-gray-600"
-              style={{ backgroundColor: color.hex }}
+              className="w-8 h-8 rounded-md border border-gray-200 dark:border-gray-600 shrink-0"
+              style={{ backgroundColor: primaryColor.hex }}
             />
-            <div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 block">メインカラー</span>
-              <span className="text-xs font-mono">{color.hex}</span>
+            <div className="flex-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">メインカラー</span>
+              {palette.length > 0 ? (
+                <select
+                  value={primaryId ?? ''}
+                  onChange={(e) => setPrimaryId(e.target.value || null)}
+                  className="text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                >
+                  <option value="">現在のベースカラー ({color.hex})</option>
+                  {palette.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.hex})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-xs font-mono text-gray-600 dark:text-gray-300">{primaryColor.hex}</span>
+              )}
             </div>
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useSecondary}
-              onChange={(e) => setUseSecondary(e.target.checked)}
-              className="rounded border-gray-300"
+          {/* Secondary */}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-md border border-gray-200 dark:border-gray-600 shrink-0"
+              style={{ backgroundColor: secondaryColor?.hex ?? 'transparent' }}
             />
-            <span className="text-xs text-gray-600 dark:text-gray-400">サブカラーを指定</span>
-          </label>
-
-          {useSecondary && (
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-md border border-gray-200 dark:border-gray-600"
-                style={{ backgroundColor: secondaryColor?.hex ?? '#000' }}
-              />
-              <Input
-                type="text"
-                value={secondaryHex}
-                onChange={(e) => setSecondaryHex(e.target.value)}
-                placeholder="#6366f1"
-                className="w-28 text-xs font-mono"
-              />
+            <div className="flex-1 space-y-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400 block">サブカラー（任意）</span>
+              <div className="flex items-center gap-2">
+                {palette.length > 0 && (
+                  <select
+                    value={secondaryId ?? ''}
+                    onChange={(e) => {
+                      setSecondaryId(e.target.value || null);
+                      if (e.target.value) setUseManualSecondary(false);
+                    }}
+                    className="text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  >
+                    <option value="">パレットから選択</option>
+                    {palette.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.hex})
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <label className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useManualSecondary}
+                    onChange={(e) => {
+                      setUseManualSecondary(e.target.checked);
+                      if (e.target.checked) setSecondaryId(null);
+                    }}
+                    className="rounded border-gray-300"
+                  />
+                  直接入力
+                </label>
+                {useManualSecondary && (
+                  <Input
+                    type="text"
+                    value={secondaryHex}
+                    onChange={(e) => setSecondaryHex(e.target.value)}
+                    placeholder="#6366f1"
+                    className="w-28 text-xs font-mono"
+                  />
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* CSS output with color previews */}

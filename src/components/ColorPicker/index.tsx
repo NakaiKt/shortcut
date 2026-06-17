@@ -14,11 +14,10 @@ import { UDCheck } from './UDCheck';
 import { ColorCompareDialog } from './ColorCompareDialog';
 import { DarkModeSuggestions } from './DarkModeSuggestion';
 
-type TabId = 'harmonies' | 'ud' | 'dark' | 'theme';
+type TabId = 'harmonies' | 'dark' | 'theme';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'harmonies', label: '相性' },
-  { id: 'ud', label: 'UD' },
   { id: 'dark', label: 'ダーク' },
   { id: 'theme', label: 'テーマ' },
 ];
@@ -50,9 +49,10 @@ export function ColorPicker() {
         </p>
       </div>
 
+      {/* Color picker + preview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column: Picker (always visible) */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Left column: ColorMap + HueSlider */}
+        <div className="lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">カラーマップ</CardTitle>
@@ -67,23 +67,10 @@ export function ColorPicker() {
               <HueSlider hue={color.hsv.h} onChange={setHue} />
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">色の値</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ColorInputs
-                color={color}
-                onRgbChange={setColorFromRgb}
-                onHexChange={setColorFromHex}
-              />
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Right column: Preview */}
-        <div className="space-y-6">
+        {/* Right column: Preview + Gradient + ColorInputs */}
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">プレビュー</CardTitle>
@@ -94,32 +81,44 @@ export function ColorPicker() {
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 space-y-4">
               <BrightnessGradient color={color} onSelect={setColor} />
+              <ColorInputs
+                color={color}
+                onRgbChange={setColorFromRgb}
+                onHexChange={setColorFromHex}
+              />
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Palette: always visible, full width */}
-      <Card>
-        <CardContent className="pt-6">
-          <Palette
-            color={color}
-            palette={palette}
-            onAdd={addColor}
-            onRemove={removeColor}
-            onRename={renameColor}
-            onSelect={handleSelectHex}
-            onOpenCompare={() => setShowCompare(true)}
-          />
-        </CardContent>
-      </Card>
+      {/* Palette + UD (always visible, side by side) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardContent className="pt-6">
+            <Palette
+              color={color}
+              palette={palette}
+              onAdd={addColor}
+              onRemove={removeColor}
+              onRename={renameColor}
+              onSelect={handleSelectHex}
+              onOpenCompare={() => setShowCompare(true)}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <UDCheck palette={palette} />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Feature tabs */}
       <Card>
         <CardContent className="pt-6">
-          {/* Tab nav */}
           <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
             {TABS.map((tab) => (
               <button
@@ -136,16 +135,13 @@ export function ColorPicker() {
             ))}
           </div>
 
-          {/* Tab content */}
           {activeTab === 'harmonies' && (
             <ColorHarmonies
               color={color}
-              palette={palette}
               onSelect={setColor}
               onAddToPalette={(c) => addColor(c)}
             />
           )}
-          {activeTab === 'ud' && <UDCheck palette={palette} />}
           {activeTab === 'dark' && (
             <DarkModeSuggestions color={color} onSelect={setColor} />
           )}

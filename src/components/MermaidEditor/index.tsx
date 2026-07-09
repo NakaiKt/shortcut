@@ -33,12 +33,7 @@ export function MermaidEditor() {
           <CheatSheet diagramType={diagramType} onDiagramTypeChange={setDiagramType} />
         </div>
         <div className="h-[50vh] rounded-lg border border-gray-200 dark:border-gray-700 lg:h-full lg:rounded-none lg:border-r-0">
-          <EditorPane
-            value={code}
-            onChange={setCode}
-            diagramType={diagramType}
-            onDiagramTypeChange={setDiagramType}
-          />
+          <EditorPane value={code} onChange={setCode} diagramType={diagramType} />
         </div>
         <div className="h-[50vh] rounded-lg border border-gray-200 dark:border-gray-700 lg:h-full lg:rounded-l-none">
           <PreviewPane code={code} onSvgChange={handleSvgChange} />

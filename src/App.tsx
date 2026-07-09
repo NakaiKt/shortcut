@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ShortcutsList } from './components/ShortcutsList';
@@ -11,7 +11,9 @@ import { ImageEditor } from './components/ImageEditor';
 import { ColorPicker } from './components/ColorPicker';
 import { CurlBuilder } from './components/CurlBuilder';
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder';
+const MermaidEditor = lazy(() => import('./components/MermaidEditor').then((m) => ({ default: m.MermaidEditor })));
+
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('shortcuts');
@@ -47,6 +49,11 @@ function App() {
           {currentPage === 'image-editor' && <ImageEditor />}
           {currentPage === 'color-picker' && <ColorPicker />}
           {currentPage === 'curl-builder' && <CurlBuilder />}
+          {currentPage === 'mermaid-editor' && (
+            <Suspense fallback={<p className="text-sm text-gray-500 dark:text-gray-400">読み込み中...</p>}>
+              <MermaidEditor />
+            </Suspense>
+          )}
         </div>
       </main>
 

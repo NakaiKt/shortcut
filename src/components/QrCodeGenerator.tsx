@@ -21,6 +21,9 @@ const EC_OPTIONS: { label: string; value: ErrorCorrectionLevel; recovery: string
   { label: 'H', value: 'H', recovery: '約30%', description: 'ロゴ重ねや屋外掲示など、破損しやすい用途向け' },
 ];
 
+/** Preview frame padding (p-4) plus its 1px border, on both sides. */
+const BOX_CHROME = 34;
+
 export function QrCodeGenerator() {
   const [url, setUrl] = useState('https://github.com/NakaiKt/shortcut');
   const [size, setSize] = useState<QrSize>(256);
@@ -72,7 +75,9 @@ export function QrCodeGenerator() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px] items-start">
+      {/* Preview column is fixed at the width the largest QR (512px) needs, so
+          S/M/L differ visibly; below xl the columns stack and it spans full width. */}
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_600px]">
         <div className="flex flex-col gap-4">
           <div className="relative">
             <LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -107,16 +112,25 @@ export function QrCodeGenerator() {
               <span className="text-sm font-medium whitespace-nowrap">誤り訂正:</span>
               <div className="flex gap-1 rounded-md border p-1">
                 {EC_OPTIONS.map((opt) => (
-                  <Button
-                    key={opt.value}
-                    variant={ec === opt.value ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setEc(opt.value)}
-                    className="h-8"
-                    title={`${opt.recovery}のデータを復元可能 — ${opt.description}`}
-                  >
-                    {opt.label}
-                  </Button>
+                  <span key={opt.value} className="group relative inline-flex">
+                    <Button
+                      variant={ec === opt.value ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setEc(opt.value)}
+                      className="h-8"
+                    >
+                      {opt.label}
+                    </Button>
+                    <span
+                      role="tooltip"
+                      className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-60 -translate-x-1/2 rounded-md border bg-popover p-3 text-xs leading-relaxed text-popover-foreground opacity-0 shadow-md transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+                    >
+                      <span className="block font-medium">
+                        {opt.label}：{opt.recovery}のデータを復元可能
+                      </span>
+                      <span className="mt-1 block text-muted-foreground">{opt.description}</span>
+                    </span>
+                  </span>
                 ))}
               </div>
             </div>
@@ -132,28 +146,6 @@ export function QrCodeGenerator() {
               <div>3. 「PNGをダウンロード」で画像として保存できます</div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">誤り訂正レベルとは</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                QRコードが汚れたり一部が欠けたりしても読み取れるように、あらかじめ復元用のデータを埋め込む割合です。
-                レベルを上げるほど復元力は高まりますが、同じ内容でもドットが細かくなります。
-              </p>
-              <dl className="space-y-2">
-                {EC_OPTIONS.map((opt) => (
-                  <div key={opt.value} className="flex gap-2">
-                    <dt className="w-24 shrink-0 font-medium text-foreground">
-                      {opt.label}（{opt.recovery}）
-                    </dt>
-                    <dd>{opt.description}</dd>
-                  </div>
-                ))}
-              </dl>
-            </CardContent>
-          </Card>
         </div>
 
         <Card>
@@ -161,14 +153,24 @@ export function QrCodeGenerator() {
             <CardTitle className="text-lg">プレビュー</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
-            <div className="flex min-h-[272px] w-full items-center justify-center rounded-md border bg-white p-4">
+            <div
+              className="flex w-full items-center justify-center rounded-md border bg-white p-4"
+              // Hug the QR so the S/M/L difference is visible in the frame too,
+              // while still shrinking to fit a narrow column.
+              style={isEmpty ? { minHeight: 272 } : { maxWidth: size + BOX_CHROME, aspectRatio: '1 / 1' }}
+            >
               <canvas ref={canvasRef} className="max-w-full" style={{ display: isEmpty ? 'none' : 'block' }} />
               {isEmpty && <span className="text-sm text-gray-500">URLを入力してください</span>}
             </div>
+            {!isEmpty && (
+              <p className="text-xs text-muted-foreground">
+                書き出しサイズ: {size} × {size} px
+              </p>
+            )}
             {error && !isEmpty && (
               <p className="text-center text-sm text-red-600">このURLはQRコードに変換できませんでした</p>
             )}
-            <Button onClick={handleDownload} disabled={isEmpty} className="w-full gap-2">
+            <Button onClick={handleDownload} disabled={isEmpty} className="w-full max-w-sm gap-2">
               <Download className="h-4 w-4" />
               <span>PNGをダウンロード</span>
             </Button>

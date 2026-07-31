@@ -25,7 +25,7 @@ const EC_OPTIONS: { label: string; value: ErrorCorrectionLevel; recovery: string
 const BOX_CHROME = 34;
 
 export function QrCodeGenerator() {
-  const [url, setUrl] = useState('https://github.com/NakaiKt/shortcut');
+  const [url, setUrl] = useState('https://abehiroshi.la.coocan.jp/');
   const [size, setSize] = useState<QrSize>(256);
   const [ec, setEc] = useState<ErrorCorrectionLevel>('M');
   const [error, setError] = useState(false);

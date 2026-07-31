@@ -14,11 +14,11 @@ const SIZE_OPTIONS: { label: string; value: QrSize }[] = [
   { label: 'L', value: 512 },
 ];
 
-const EC_OPTIONS: { label: string; value: ErrorCorrectionLevel }[] = [
-  { label: 'L', value: 'L' },
-  { label: 'M', value: 'M' },
-  { label: 'Q', value: 'Q' },
-  { label: 'H', value: 'H' },
+const EC_OPTIONS: { label: string; value: ErrorCorrectionLevel; recovery: string; description: string }[] = [
+  { label: 'L', value: 'L', recovery: '約7%', description: '汚れの少ない画面表示向け。データ量が最も少なく密度も低い' },
+  { label: 'M', value: 'M', recovery: '約15%', description: '標準。通常の印刷・画面表示はこれで十分' },
+  { label: 'Q', value: 'Q', recovery: '約25%', description: '多少の汚れや擦れが想定される場合向け' },
+  { label: 'H', value: 'H', recovery: '約30%', description: 'ロゴ重ねや屋外掲示など、破損しやすい用途向け' },
 ];
 
 export function QrCodeGenerator() {
@@ -44,7 +44,13 @@ export function QrCodeGenerator() {
         errorCorrectionLevel: ec,
         color: { dark: '#000000', light: '#ffffff' },
       },
-      (err) => setError(!!err)
+      (err) => {
+        setError(!!err);
+        // qrcode writes explicit px width/height onto the element, which would
+        // stretch the canvas once max-width kicks in on narrow containers.
+        canvas.style.width = `${size}px`;
+        canvas.style.height = 'auto';
+      }
     );
   }, [trimmedUrl, size, ec, isEmpty]);
 
@@ -107,6 +113,7 @@ export function QrCodeGenerator() {
                     size="sm"
                     onClick={() => setEc(opt.value)}
                     className="h-8"
+                    title={`${opt.recovery}のデータを復元可能 — ${opt.description}`}
                   >
                     {opt.label}
                   </Button>
@@ -125,6 +132,28 @@ export function QrCodeGenerator() {
               <div>3. 「PNGをダウンロード」で画像として保存できます</div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">誤り訂正レベルとは</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                QRコードが汚れたり一部が欠けたりしても読み取れるように、あらかじめ復元用のデータを埋め込む割合です。
+                レベルを上げるほど復元力は高まりますが、同じ内容でもドットが細かくなります。
+              </p>
+              <dl className="space-y-2">
+                {EC_OPTIONS.map((opt) => (
+                  <div key={opt.value} className="flex gap-2">
+                    <dt className="w-24 shrink-0 font-medium text-foreground">
+                      {opt.label}（{opt.recovery}）
+                    </dt>
+                    <dd>{opt.description}</dd>
+                  </div>
+                ))}
+              </dl>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>
@@ -133,7 +162,7 @@ export function QrCodeGenerator() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             <div className="flex min-h-[272px] w-full items-center justify-center rounded-md border bg-white p-4">
-              <canvas ref={canvasRef} className="h-auto max-w-full" style={{ display: isEmpty ? 'none' : 'block' }} />
+              <canvas ref={canvasRef} className="max-w-full" style={{ display: isEmpty ? 'none' : 'block' }} />
               {isEmpty && <span className="text-sm text-gray-500">URLを入力してください</span>}
             </div>
             {error && !isEmpty && (

@@ -1,7 +1,7 @@
-import { List, FileText, GitCompare, Moon, Sun, Terminal, FileDown, Image, Palette, Pencil, Braces, Workflow } from 'lucide-react';
+import { List, FileText, GitCompare, Moon, Sun, Terminal, FileDown, Image, Palette, Pencil, Braces, Workflow, QrCode } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor' | 'qr-code';
 
 interface SidebarProps {
   currentPage: Page;
@@ -24,6 +24,7 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
     { id: 'color-picker' as Page, label: 'カラーピッカー', icon: Palette },
     { id: 'curl-builder' as Page, label: 'curlビルダー', icon: Braces },
     { id: 'mermaid-editor' as Page, label: 'Mermaidエディタ', icon: Workflow },
+    { id: 'qr-code' as Page, label: 'QRコード生成', icon: QrCode },
   ];
 
   const handlePageChange = (page: Page) => {

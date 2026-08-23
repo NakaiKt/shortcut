@@ -352,6 +352,40 @@ export const commands: Command[] = [
     ],
   },
   {
+    id: 'git-track-remote-branch',
+    category: 'git',
+    name: 'リモートのブランチをローカルに追加',
+    description: 'リモートにはあるがローカルにないブランチを取得し、追跡ブランチとしてチェックアウトします',
+    windowsCommand: 'git fetch origin && git switch {ブランチ名}',
+    macCommand: 'git fetch origin && git switch {ブランチ名}',
+    options: [
+      {
+        id: 'list-remote-branches',
+        windows: 'git branch -r',
+        mac: 'git branch -r',
+        description: 'リモートブランチの一覧を確認（取得前にブランチ名をチェック）',
+      },
+      {
+        id: 'fetch-all-prune',
+        windows: 'git fetch --all --prune',
+        mac: 'git fetch --all --prune',
+        description: '全リモートの情報を取得し、削除済みブランチの参照を整理',
+      },
+      {
+        id: 'checkout-style',
+        windows: 'git checkout -b {ブランチ名} origin/{ブランチ名}',
+        mac: 'git checkout -b {ブランチ名} origin/{ブランチ名}',
+        description: 'Git 2.23未満での書き方（switchが使えない場合）',
+      },
+      {
+        id: 'rename-local',
+        windows: 'git switch -c {ローカルブランチ名} origin/{リモートブランチ名}',
+        mac: 'git switch -c {ローカルブランチ名} origin/{リモートブランチ名}',
+        description: 'ローカルでは別の名前で作成する場合',
+      },
+    ],
+  },
+  {
     id: 'console-history',
     category: 'console',
     name: 'コマンド履歴表示',

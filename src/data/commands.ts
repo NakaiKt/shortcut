@@ -324,6 +324,46 @@ export const commands: Command[] = [
     macCommand: 'docker container prune -f',
   },
   {
+    id: 'git-add',
+    category: 'git',
+    name: '変更をステージに追加',
+    description: '変更内容をステージング（コミット対象）に追加します',
+    windowsCommand: 'git add {ファイルパス}',
+    macCommand: 'git add {ファイルパス}',
+    options: [
+      {
+        id: 'patch',
+        windows: '-p',
+        mac: '-p',
+        description: 'ファイル全体ではなく変更の一部（hunk単位）を対話的に選んで追加。y=追加 / n=スキップ / s=さらに分割 / e=手動編集で行単位の選択',
+      },
+      {
+        id: 'all',
+        windows: '-A',
+        mac: '-A',
+        description: '削除も含めたすべての変更を追加',
+      },
+      {
+        id: 'update',
+        windows: '-u',
+        mac: '-u',
+        description: '追跡済みファイルの変更のみ追加（新規ファイルは対象外）',
+      },
+      {
+        id: 'dry-run',
+        windows: '-n',
+        mac: '-n',
+        description: '実際には追加せず、追加される対象だけを表示',
+      },
+      {
+        id: 'interactive',
+        windows: '-i',
+        mac: '-i',
+        description: '対話モードを起動（メニューからpatchなどを選択）',
+      },
+    ],
+  },
+  {
     id: 'git-restore-from-branch',
     category: 'git',
     name: '特定ファイルを別ブランチの状態に戻す',

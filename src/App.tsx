@@ -11,10 +11,11 @@ import { ImageEditor } from './components/ImageEditor';
 import { ColorPicker } from './components/ColorPicker';
 import { CurlBuilder } from './components/CurlBuilder';
 import { QrCodeGenerator } from './components/QrCodeGenerator';
+import { MediaPreview } from './components/MediaPreview';
 
 const MermaidEditor = lazy(() => import('./components/MermaidEditor').then((m) => ({ default: m.MermaidEditor })));
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor' | 'qr-code';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor' | 'qr-code' | 'media-preview';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('shortcuts');
@@ -56,6 +57,7 @@ function App() {
             </Suspense>
           )}
           {currentPage === 'qr-code' && <QrCodeGenerator />}
+          {currentPage === 'media-preview' && <MediaPreview />}
         </div>
       </main>
 

@@ -1,13 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, Grid3X3 } from 'lucide-react';
+import { X, Grid3X3, Image as ImageIcon } from 'lucide-react';
 import { useImageMosaic } from '@/hooks/useImageMosaic';
-import { ImageUploader } from './ImageUploader';
+import { FileDropzone } from '@/components/FileDropzone';
 import { MosaicToolbar } from './MosaicToolbar';
 import { GranularitySlider } from './GranularitySlider';
 import { MosaicCanvas } from './MosaicCanvas';
 import { ExportActions } from './ExportActions';
 import type { EditorTool } from './types';
+
+const IMAGE_ACCEPT = ['image/*'];
 
 // 将来の拡張用: ツール定義
 const EDITOR_TOOLS: { id: EditorTool; label: string; icon: typeof Grid3X3 }[] = [
@@ -73,7 +75,13 @@ export function ImageEditor() {
       {/* 画像アップロード / 画像情報バー */}
       {!sourceImage ? (
         <Card className="p-6">
-          <ImageUploader onFileSelect={loadImage} />
+          <FileDropzone
+            onFilesSelect={(files) => loadImage(files[0])}
+            accept={IMAGE_ACCEPT}
+            description="画像をドラッグ&ドロップ、クリップボードから貼り付け（Ctrl+V）、または選択してください"
+            buttonLabel="画像を選択"
+            icon={ImageIcon}
+          />
         </Card>
       ) : (
         <Card className="p-4">

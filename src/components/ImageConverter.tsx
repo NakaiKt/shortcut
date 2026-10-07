@@ -1,10 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Upload, Download, Image as ImageIcon, FileImage, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
+import { FileDropzone } from './FileDropzone';
 // @ts-ignore - imagetracerjsには型定義がないため
 import ImageTracer from 'imagetracerjs';
 import JSZip from 'jszip';
+
+const IMAGE_ACCEPT = ['image/*'];
 
 type OutputFormat = 'jpeg' | 'png' | 'webp' | 'svg';
 
@@ -17,20 +20,9 @@ export function ImageConverter() {
   const [sourceImages, setSourceImages] = useState<SourceImage[]>([]);
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('png');
   const [isConverting, setIsConverting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    // FileListはliveオブジェクトなのでinputリセット前にコピーする
-    const fileArray = Array.from(files);
+  const handleFilesSelect = (fileArray: File[]) => {
     const totalFiles = fileArray.length;
-
-    // inputをリセットして同じファイルを再選択できるようにする
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
 
     const newImages: SourceImage[] = [];
     let loaded = 0;
@@ -276,21 +268,14 @@ export function ImageConverter() {
           画像をアップロード
         </h2>
         <div className="space-y-4">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
+          <FileDropzone
+            onFilesSelect={handleFilesSelect}
+            accept={IMAGE_ACCEPT}
             multiple
-            onChange={handleFileUpload}
-            className="hidden"
+            description="画像をドラッグ&ドロップ、クリップボードから貼り付け（Ctrl+V）、または選択してください（複数可）"
+            buttonLabel="画像を選択"
+            icon={ImageIcon}
           />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full sm:w-auto"
-          >
-            <ImageIcon className="mr-2" size={18} />
-            画像を選択（複数可）
-          </Button>
           {sourceImages.length > 0 && (
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {sourceImages.length}枚の画像を選択中

@@ -6,7 +6,7 @@ import { CommandsList } from './components/CommandsList';
 import { TextEditor } from './components/TextEditor';
 import { TextDiff } from './components/TextDiff';
 import { DummyFileCreator } from './components/DummyFileCreator';
-import { ImageConverter } from './components/ImageConverter';
+import { FileConverter } from './components/FileConverter';
 import { ImageEditor } from './components/ImageEditor';
 import { ColorPicker } from './components/ColorPicker';
 import { CurlBuilder } from './components/CurlBuilder';
@@ -15,7 +15,7 @@ import { MediaPreview } from './components/MediaPreview';
 
 const MermaidEditor = lazy(() => import('./components/MermaidEditor').then((m) => ({ default: m.MermaidEditor })));
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor' | 'qr-code' | 'media-preview';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'file-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor' | 'qr-code' | 'media-preview';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('shortcuts');
@@ -47,7 +47,7 @@ function App() {
           {currentPage === 'text-editor' && <TextEditor />}
           {currentPage === 'text-diff' && <TextDiff />}
           {currentPage === 'dummy-file-creator' && <DummyFileCreator />}
-          {currentPage === 'image-converter' && <ImageConverter />}
+          {currentPage === 'file-converter' && <FileConverter />}
           {currentPage === 'image-editor' && <ImageEditor />}
           {currentPage === 'color-picker' && <ColorPicker />}
           {currentPage === 'curl-builder' && <CurlBuilder />}

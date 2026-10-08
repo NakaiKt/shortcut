@@ -1,7 +1,7 @@
-import { List, FileText, GitCompare, Moon, Sun, Terminal, FileDown, Image, Palette, Pencil, Braces, Workflow, QrCode, LayoutGrid } from 'lucide-react';
+import { List, FileText, GitCompare, Moon, Sun, Terminal, FileDown, ArrowLeftRight, Palette, Pencil, Braces, Workflow, QrCode, LayoutGrid } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 
-type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'image-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor' | 'qr-code' | 'media-preview';
+type Page = 'shortcuts' | 'commands' | 'text-editor' | 'text-diff' | 'dummy-file-creator' | 'file-converter' | 'image-editor' | 'color-picker' | 'curl-builder' | 'mermaid-editor' | 'qr-code' | 'media-preview';
 
 interface SidebarProps {
   currentPage: Page;
@@ -19,7 +19,7 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onClose }: SidebarP
     { id: 'text-editor' as Page, label: 'テキスト作成', icon: FileText },
     { id: 'text-diff' as Page, label: 'テキスト差分表示', icon: GitCompare },
     { id: 'dummy-file-creator' as Page, label: 'ダミーファイル作成', icon: FileDown },
-    { id: 'image-converter' as Page, label: '画像拡張子変換', icon: Image },
+    { id: 'file-converter' as Page, label: 'ファイル拡張子変換', icon: ArrowLeftRight },
     { id: 'image-editor' as Page, label: '画像編集', icon: Pencil },
     { id: 'media-preview' as Page, label: 'メディアプレビュー', icon: LayoutGrid },
     { id: 'color-picker' as Page, label: 'カラーピッカー', icon: Palette },

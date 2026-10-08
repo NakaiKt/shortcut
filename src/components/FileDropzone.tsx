@@ -33,6 +33,7 @@ export function FileDropzone({
   buttonLabel = 'ファイルを選択',
   icon: Icon = FileIcon,
 }: FileDropzoneProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   // 呼び出し側がインライン関数を渡しても paste リスナーを毎レンダー張り直さないよう ref で保持する
@@ -49,6 +50,8 @@ export function FileDropzone({
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
+      // 非表示のタブ等に置かれたドロップゾーンは貼り付けを受け取らない（表示中の入力欄へ横取りされないように）
+      if (!rootRef.current?.offsetParent) return;
       const items = e.clipboardData?.items;
       if (!items) return;
       const files: File[] = [];
@@ -91,6 +94,7 @@ export function FileDropzone({
 
   return (
     <div
+      ref={rootRef}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
